@@ -7,7 +7,6 @@
 
 import * as fs from 'fs'
 import * as path from 'path'
-import * as vscode from 'vscode'
 import { PNG } from 'pngjs'
 import {
   PNG_ALPHA_THRESHOLD,
@@ -53,19 +52,19 @@ export interface LoadedAssets {
  * Load furniture assets from disk
  */
 export async function loadFurnitureAssets(
-  workspaceRoot: string,
+  assetsRoot: string,
 ): Promise<LoadedAssets | null> {
   try {
-    console.log(`[AssetLoader] workspaceRoot received: "${workspaceRoot}"`)
-    const catalogPath = path.join(workspaceRoot, 'assets', 'furniture', 'furniture-catalog.json')
+    console.log(`[AssetLoader] assetsRoot received: "${assetsRoot}"`)
+    const catalogPath = path.join(assetsRoot, 'assets', 'furniture', 'furniture-catalog.json')
     console.log(`[AssetLoader] Attempting to load from: ${catalogPath}`)
 
     if (!fs.existsSync(catalogPath)) {
-      console.log('ℹ️  No furniture catalog found at:', catalogPath)
+      console.log('[AssetLoader] No furniture catalog found at:', catalogPath)
       return null
     }
 
-    console.log('📦 Loading furniture assets from:', catalogPath)
+    console.log('[AssetLoader] Loading furniture assets from:', catalogPath)
 
     const catalogContent = fs.readFileSync(catalogPath, 'utf-8')
     const catalogData = JSON.parse(catalogContent)
@@ -80,10 +79,10 @@ export async function loadFurnitureAssets(
         if (!filePath.startsWith('assets/')) {
           filePath = `assets/${filePath}`
         }
-        const assetPath = path.join(workspaceRoot, filePath)
+        const assetPath = path.join(assetsRoot, filePath)
 
         if (!fs.existsSync(assetPath)) {
-          console.warn(`  ⚠️  Asset file not found: ${asset.file}`)
+          console.warn(`  Warning: Asset file not found: ${asset.file}`)
           continue
         }
 
@@ -93,55 +92,46 @@ export async function loadFurnitureAssets(
 
         sprites.set(asset.id, spriteData)
       } catch (err) {
-        console.warn(`  ⚠️  Error loading ${asset.id}: ${err instanceof Error ? err.message : err}`)
+        console.warn(`  Warning: Error loading ${asset.id}: ${err instanceof Error ? err.message : err}`)
       }
     }
 
-    console.log(`  ✓ Loaded ${sprites.size} / ${catalog.length} assets`)
-    console.log(`[AssetLoader] ✅ Successfully loaded ${sprites.size} furniture sprites`)
-
+    console.log(`  Loaded ${sprites.size} / ${catalog.length} assets`)
     return { catalog, sprites }
   } catch (err) {
-    console.error(`[AssetLoader] ❌ Error loading furniture assets: ${err instanceof Error ? err.message : err}`)
+    console.error(`[AssetLoader] Error loading furniture assets: ${err instanceof Error ? err.message : err}`)
     return null
   }
 }
 
 /**
  * Convert PNG buffer to SpriteData (2D array of hex color strings)
- *
- * PNG format: RGBA
- * SpriteData format: string[][] where '' = transparent, '#RRGGBB' = opaque color
  */
 function pngToSpriteData(pngBuffer: Buffer, width: number, height: number): string[][] {
   try {
-    // Parse PNG using pngjs
     const png = PNG.sync.read(pngBuffer)
 
     if (png.width !== width || png.height !== height) {
       console.warn(
-        `PNG dimensions mismatch: expected ${width}×${height}, got ${png.width}×${png.height}`,
+        `PNG dimensions mismatch: expected ${width}x${height}, got ${png.width}x${png.height}`,
       )
     }
 
     const sprite: string[][] = []
-    const data = png.data // Uint8Array with RGBA values
+    const data = png.data
 
     for (let y = 0; y < height; y++) {
       const row: string[] = []
       for (let x = 0; x < width; x++) {
         const pixelIndex = (y * png.width + x) * 4
-
         const r = data[pixelIndex]
         const g = data[pixelIndex + 1]
         const b = data[pixelIndex + 2]
         const a = data[pixelIndex + 3]
 
-        // If alpha is near zero, treat as transparent
         if (a < PNG_ALPHA_THRESHOLD) {
           row.push('')
         } else {
-          // Convert RGB to hex color string
           const hex = `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`.toUpperCase()
           row.push(hex)
         }
@@ -152,7 +142,6 @@ function pngToSpriteData(pngBuffer: Buffer, width: number, height: number): stri
     return sprite
   } catch (err) {
     console.warn(`Failed to parse PNG: ${err instanceof Error ? err.message : err}`)
-    // Return transparent placeholder
     const sprite: string[][] = []
     for (let y = 0; y < height; y++) {
       sprite.push(new Array(width).fill(''))
@@ -165,7 +154,6 @@ function pngToSpriteData(pngBuffer: Buffer, width: number, height: number): stri
 
 /**
  * Load the bundled default layout from assets/default-layout.json.
- * Returns the parsed layout object or null if not found.
  */
 export function loadDefaultLayout(assetsRoot: string): Record<string, unknown> | null {
   try {
@@ -176,10 +164,10 @@ export function loadDefaultLayout(assetsRoot: string): Record<string, unknown> |
     }
     const content = fs.readFileSync(layoutPath, 'utf-8')
     const layout = JSON.parse(content) as Record<string, unknown>
-    console.log(`[AssetLoader] ✅ Loaded default layout (${layout.cols}×${layout.rows})`)
+    console.log(`[AssetLoader] Loaded default layout (${layout.cols}x${layout.rows})`)
     return layout
   } catch (err) {
-    console.error(`[AssetLoader] ❌ Error loading default layout: ${err instanceof Error ? err.message : err}`)
+    console.error(`[AssetLoader] Error loading default layout: ${err instanceof Error ? err.message : err}`)
     return null
   }
 }
@@ -187,13 +175,11 @@ export function loadDefaultLayout(assetsRoot: string): Record<string, unknown> |
 // ── Wall tile loading ────────────────────────────────────────
 
 export interface LoadedWallTiles {
-  /** 16 sprites indexed by bitmask (N=1,E=2,S=4,W=8), each 16×32 SpriteData */
   sprites: string[][][]
 }
 
 /**
- * Load wall tiles from walls.png (64×128, 4×4 grid of 16×32 pieces).
- * Piece at bitmask M: col = M % 4, row = floor(M / 4).
+ * Load wall tiles from walls.png (64x128, 4x4 grid of 16x32 pieces).
  */
 export async function loadWallTiles(
   assetsRoot: string,
@@ -233,27 +219,15 @@ export async function loadWallTiles(
       sprites.push(sprite)
     }
 
-    console.log(`[AssetLoader] ✅ Loaded ${sprites.length} wall tile pieces`)
+    console.log(`[AssetLoader] Loaded ${sprites.length} wall tile pieces`)
     return { sprites }
   } catch (err) {
-    console.error(`[AssetLoader] ❌ Error loading wall tiles: ${err instanceof Error ? err.message : err}`)
+    console.error(`[AssetLoader] Error loading wall tiles: ${err instanceof Error ? err.message : err}`)
     return null
   }
 }
 
-/**
- * Send wall tiles to webview
- */
-export function sendWallTilesToWebview(
-  webview: vscode.Webview,
-  wallTiles: LoadedWallTiles,
-): void {
-  webview.postMessage({
-    type: 'wallTilesLoaded',
-    sprites: wallTiles.sprites,
-  })
-  console.log(`📤 Sent ${wallTiles.sprites.length} wall tile pieces to webview`)
-}
+// ── Floor tile loading ───────────────────────────────────────
 
 export interface LoadedFloorTiles {
   sprites: string[][][] // 7 sprites, each 16x16 SpriteData
@@ -298,26 +272,12 @@ export async function loadFloorTiles(
       sprites.push(sprite)
     }
 
-    console.log(`[AssetLoader] ✅ Loaded ${sprites.length} floor tile patterns`)
+    console.log(`[AssetLoader] Loaded ${sprites.length} floor tile patterns`)
     return { sprites }
   } catch (err) {
-    console.error(`[AssetLoader] ❌ Error loading floor tiles: ${err instanceof Error ? err.message : err}`)
+    console.error(`[AssetLoader] Error loading floor tiles: ${err instanceof Error ? err.message : err}`)
     return null
   }
-}
-
-/**
- * Send floor tiles to webview
- */
-export function sendFloorTilesToWebview(
-  webview: vscode.Webview,
-  floorTiles: LoadedFloorTiles,
-): void {
-  webview.postMessage({
-    type: 'floorTilesLoaded',
-    sprites: floorTiles.sprites,
-  })
-  console.log(`📤 Sent ${floorTiles.sprites.length} floor tile patterns to webview`)
 }
 
 // ── Character sprite loading ────────────────────────────────
@@ -329,14 +289,11 @@ export interface CharacterDirectionSprites {
 }
 
 export interface LoadedCharacterSprites {
-  /** 6 pre-colored characters, each with 9 frames per direction */
   characters: CharacterDirectionSprites[]
 }
 
-
 /**
- * Load pre-colored character sprites from assets/characters/ (6 PNGs, each 112×96).
- * Each PNG has 3 direction rows (down, up, right) × 7 frames (16×32 each).
+ * Load pre-colored character sprites from assets/characters/ (6 PNGs, each 112x96).
  */
 export async function loadCharacterSprites(
   assetsRoot: string,
@@ -389,53 +346,21 @@ export async function loadCharacterSprites(
       characters.push(charData)
     }
 
-    console.log(`[AssetLoader] ✅ Loaded ${characters.length} character sprites (${CHAR_FRAMES_PER_ROW} frames × 3 directions each)`)
+    console.log(`[AssetLoader] Loaded ${characters.length} character sprites (${CHAR_FRAMES_PER_ROW} frames x 3 directions each)`)
     return { characters }
   } catch (err) {
-    console.error(`[AssetLoader] ❌ Error loading character sprites: ${err instanceof Error ? err.message : err}`)
+    console.error(`[AssetLoader] Error loading character sprites: ${err instanceof Error ? err.message : err}`)
     return null
   }
 }
 
 /**
- * Send character sprites to webview
+ * Convert LoadedAssets sprites Map to a plain object for JSON serialization
  */
-export function sendCharacterSpritesToWebview(
-  webview: vscode.Webview,
-  charSprites: LoadedCharacterSprites,
-): void {
-  webview.postMessage({
-    type: 'characterSpritesLoaded',
-    characters: charSprites.characters,
-  })
-  console.log(`📤 Sent ${charSprites.characters.length} character sprites to webview`)
-}
-
-/**
- * Send loaded assets to webview
- */
-export function sendAssetsToWebview(
-  webview: vscode.Webview,
-  assets: LoadedAssets,
-): void {
-  if (!assets) {
-    console.log('[AssetLoader] ⚠️  No assets to send')
-    return
-  }
-
-  console.log('[AssetLoader] Converting sprites Map to object...')
-  // Convert sprites Map to plain object for JSON serialization
-  const spritesObj: Record<string, string[][]> = {}
+export function spritesToObject(assets: LoadedAssets): Record<string, string[][]> {
+  const obj: Record<string, string[][]> = {}
   for (const [id, spriteData] of assets.sprites) {
-    spritesObj[id] = spriteData
+    obj[id] = spriteData
   }
-
-  console.log(`[AssetLoader] Posting furnitureAssetsLoaded message with ${assets.catalog.length} assets`)
-  webview.postMessage({
-    type: 'furnitureAssetsLoaded',
-    catalog: assets.catalog,
-    sprites: spritesObj,
-  })
-
-  console.log(`📤 Sent ${assets.catalog.length} furniture assets to webview`)
+  return obj
 }

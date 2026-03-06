@@ -19,10 +19,9 @@ export function extractToolName(status: string): string | null {
   return first || null
 }
 
-import { ZOOM_DEFAULT_DPR_FACTOR, ZOOM_MIN } from '../constants.js'
+import { ZOOM_DEFAULT } from '../constants.js'
 
-/** Compute a default integer zoom level (device pixels per sprite pixel) */
+/** Default zoom level (fixed 6x for standalone browser app) */
 export function defaultZoom(): number {
-  const dpr = window.devicePixelRatio || 1
-  return Math.max(ZOOM_MIN, Math.round(ZOOM_DEFAULT_DPR_FACTOR * dpr))
+  return ZOOM_DEFAULT
 }

@@ -1,5 +1,4 @@
 import type { ToolActivity } from '../office/types.js'
-import { vscode } from '../vscodeApi.js'
 
 interface DebugViewProps {
   agents: number[]
@@ -7,7 +6,6 @@ interface DebugViewProps {
   agentTools: Record<number, ToolActivity[]>
   agentStatuses: Record<number, string>
   subagentTools: Record<number, Record<string, ToolActivity[]>>
-  onSelectAgent: (id: number) => void
 }
 
 /** Z-index just below the floating toolbar (50) so the toolbar stays on top */
@@ -56,7 +54,6 @@ export function DebugView({
   agentTools,
   agentStatuses,
   subagentTools,
-  onSelectAgent,
 }: DebugViewProps) {
   const renderAgentCard = (id: number) => {
     const isSelected = selectedAgent === id
@@ -74,34 +71,16 @@ export function DebugView({
           background: isSelected ? 'var(--vscode-list-activeSelectionBackground, rgba(255,255,255,0.04))' : undefined,
         }}
       >
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 0 }}>
-          <button
-            onClick={() => onSelectAgent(id)}
-            style={{
-              borderRadius: 0,
-              padding: '6px 10px',
-              fontSize: '26px',
-              background: isSelected ? 'rgba(90, 140, 255, 0.25)' : undefined,
-              color: isSelected ? '#fff' : undefined,
-              fontWeight: isSelected ? 'bold' : undefined,
-            }}
-          >
-            Agent #{id}
-          </button>
-          <button
-            onClick={() => vscode.postMessage({ type: 'closeAgent', id })}
-            style={{
-              borderRadius: 0,
-              padding: '6px 8px',
-              fontSize: '26px',
-              opacity: 0.7,
-              background: isSelected ? 'rgba(90, 140, 255, 0.25)' : undefined,
-              color: isSelected ? '#fff' : undefined,
-            }}
-            title="Close agent"
-          >
-            ✕
-          </button>
+        <span
+          style={{
+            display: 'inline-block',
+            padding: '6px 10px',
+            fontSize: '26px',
+            fontWeight: isSelected ? 'bold' : undefined,
+            color: isSelected ? '#fff' : undefined,
+          }}
+        >
+          Agent #{id}
         </span>
         {(tools.length > 0 || status === 'waiting') && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 1, marginTop: 4, paddingLeft: 4 }}>

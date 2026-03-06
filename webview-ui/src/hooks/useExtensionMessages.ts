@@ -7,7 +7,7 @@ import { buildDynamicCatalog } from '../office/layout/furnitureCatalog.js'
 import { setFloorSprites } from '../office/floorTiles.js'
 import { setWallSprites } from '../office/wallTiles.js'
 import { setCharacterTemplates } from '../office/sprites/spriteData.js'
-import { vscode } from '../vscodeApi.js'
+import { vscode, addMessageListener, removeMessageListener } from '../wsApi.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
 
 export interface SubagentCharacter {
@@ -355,9 +355,9 @@ export function useExtensionMessages(
         }
       }
     }
-    window.addEventListener('message', handler)
+    addMessageListener(handler)
     vscode.postMessage({ type: 'webviewReady' })
-    return () => window.removeEventListener('message', handler)
+    return () => removeMessageListener(handler)
   }, [getOfficeState])
 
   return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders }

@@ -8,4 +8,11 @@ export default defineConfig({
     emptyOutDir: true,
   },
   base: './',
+  server: {
+    proxy: {
+      '/assets': {
+        target: 'http://localhost:4800',
+      },
+    },
+  },
 })

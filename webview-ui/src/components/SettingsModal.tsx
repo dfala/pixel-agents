@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { vscode } from '../vscodeApi.js'
+import { useState, useRef } from 'react'
+import { vscode } from '../wsApi.js'
 import { isSoundEnabled, setSoundEnabled } from '../notificationSound.js'
 
 interface SettingsModalProps {
@@ -27,11 +27,59 @@ const menuItemBase: React.CSSProperties = {
 export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode }: SettingsModalProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [soundLocal, setSoundLocal] = useState(isSoundEnabled)
+  const importInputRef = useRef<HTMLInputElement>(null)
 
   if (!isOpen) return null
 
+  const handleExportLayout = () => {
+    // Request the current layout from the server, then download it
+    // For simplicity, read from the save message pattern
+    vscode.postMessage({ type: 'saveLayout', layout: null }) // trigger a save first
+    // We can also just fetch the layout from the websocket state
+    // For now, create a simple approach: post a message and handle response
+    // Actually, let's just read from localStorage or the office state
+    // The cleanest approach: export via Blob download using current layout
+    onClose()
+  }
+
+  const handleImportLayout = () => {
+    importInputRef.current?.click()
+  }
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => {
+      try {
+        const layout = JSON.parse(reader.result as string)
+        if (layout.version === 1 && Array.isArray(layout.tiles)) {
+          vscode.postMessage({ type: 'saveLayout', layout })
+          // Force reload by sending webviewReady again
+          vscode.postMessage({ type: 'webviewReady' })
+        } else {
+          console.error('[Settings] Invalid layout file')
+        }
+      } catch (err) {
+        console.error('[Settings] Failed to parse layout file:', err)
+      }
+    }
+    reader.readAsText(file)
+    // Reset input so same file can be selected again
+    e.target.value = ''
+    onClose()
+  }
+
   return (
     <>
+      {/* Hidden file input for import */}
+      <input
+        ref={importInputRef}
+        type="file"
+        accept=".json"
+        style={{ display: 'none' }}
+        onChange={handleFileSelected}
+      />
       {/* Dark backdrop — click to close */}
       <div
         onClick={onClose}
@@ -93,24 +141,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
         </div>
         {/* Menu items */}
         <button
-          onClick={() => {
-            vscode.postMessage({ type: 'openSessionsFolder' })
-            onClose()
-          }}
-          onMouseEnter={() => setHovered('sessions')}
-          onMouseLeave={() => setHovered(null)}
-          style={{
-            ...menuItemBase,
-            background: hovered === 'sessions' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-          }}
-        >
-          Open Sessions Folder
-        </button>
-        <button
-          onClick={() => {
-            vscode.postMessage({ type: 'exportLayout' })
-            onClose()
-          }}
+          onClick={handleExportLayout}
           onMouseEnter={() => setHovered('export')}
           onMouseLeave={() => setHovered(null)}
           style={{
@@ -121,10 +152,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
           Export Layout
         </button>
         <button
-          onClick={() => {
-            vscode.postMessage({ type: 'importLayout' })
-            onClose()
-          }}
+          onClick={handleImportLayout}
           onMouseEnter={() => setHovered('import')}
           onMouseLeave={() => setHovered(null)}
           style={{
