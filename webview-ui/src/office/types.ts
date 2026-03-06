@@ -206,4 +206,10 @@ export interface Character {
   matrixEffectSeeds: number[]
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string
+  /** When set, the character is visiting something specific during idle */
+  idleVisitType: 'break' | 'pet' | null
+  /** Timer for special idle visit pauses (break furniture dwell, pet interaction) */
+  idleVisitTimer: number
+  /** Whether the character has poked the pet during this visit */
+  idleVisitPokedPet: boolean
 }

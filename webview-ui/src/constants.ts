@@ -140,3 +140,20 @@ export const PET_Z_SORT_OFFSET = 0.3                  // slightly in front of sa
 export const PET_HIT_HALF_WIDTH = 8
 export const PET_HIT_HEIGHT = 14
 export const PET_SLEEP_BUBBLE_OFFSET_PX = 10          // bubble position above sleeping pet
+
+// ── Idle Behaviors ─────────────────────────────────────────
+export const BREAK_VISIT_PAUSE_MIN_SEC = 3
+export const BREAK_VISIT_PAUSE_MAX_SEC = 5
+export const IDLE_DESTINATION_RANDOM_WEIGHT = 0.60
+export const IDLE_DESTINATION_BREAK_WEIGHT = 0.25
+export const IDLE_DESTINATION_PET_WEIGHT = 0.15
+export const PET_VISIT_PRE_POKE_PAUSE_SEC = 1.0
+export const PET_VISIT_POST_POKE_PAUSE_SEC = 2.0
+
+export const BREAK_FURNITURE_TYPES = new Set([
+  'WATER_COOLER',
+  'VENDING_MACHINE',
+  'FRIDGE',
+  'COFFEE_TABLE_LG',
+  'COFFEE_MUG',
+])

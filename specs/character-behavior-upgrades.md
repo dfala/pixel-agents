@@ -1,5 +1,7 @@
 # Character Behavior Upgrades
 
+**Status: Implemented**
+
 **Always-visible status labels, richer idle behaviors, and a hand-raise permission animation.**
 
 Three improvements to how characters look and act in the office. The status label now floats above every character at all times instead of only appearing on hover. Idle agents wander more purposefully — visiting the water cooler or vending machine, and occasionally interacting with the pet raccoon. When an agent needs permission, the character raises its hand (animated) instead of showing a static amber dots bubble.

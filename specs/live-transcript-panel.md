@@ -1,5 +1,7 @@
 # Live Transcript Panel
 
+**Status: Implemented**
+
 **Click agent → see what it's doing in real-time.**
 
 When you click an agent character, a panel slides in from the right showing the last ~20 transcript entries — assistant text, tool calls, tool results — auto-scrolling as new activity arrives. Click away or click another agent to switch.

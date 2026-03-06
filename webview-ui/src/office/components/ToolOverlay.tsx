@@ -13,6 +13,7 @@ interface ToolOverlayProps {
   containerRef: React.RefObject<HTMLDivElement | null>
   zoom: number
   panRef: React.RefObject<{ x: number; y: number }>
+  isEditMode: boolean
 }
 
 /** Derive a short human-readable activity string from tools/status */
@@ -47,6 +48,7 @@ export function ToolOverlay({
   containerRef,
   zoom,
   panRef,
+  isEditMode,
 }: ToolOverlayProps) {
   const [, setTick] = useState(0)
   useEffect(() => {
@@ -87,8 +89,11 @@ export function ToolOverlay({
         const isHovered = hoveredId === id
         const isSub = ch.isSubagent
 
-        // Only show for hovered or selected agents
-        if (!isSelected && !isHovered) return null
+        // All agents show a label; selected/hovered get a richer version
+        const isCompact = !isSelected && !isHovered
+
+        // Hide compact labels in edit mode
+        if (isCompact && isEditMode) return null
 
         // Position above character
         const sittingOffset = ch.state === CharacterState.TYPE ? CHARACTER_SITTING_OFFSET_PX : 0
@@ -109,7 +114,37 @@ export function ToolOverlay({
           activityText = getActivityText(id, agentTools, ch.isActive)
         }
 
-        // Determine dot color
+        // Compact label — minimal floating text only
+        if (isCompact) {
+          return (
+            <div
+              key={id}
+              style={{
+                position: 'absolute',
+                left: screenX,
+                top: screenY - 24,
+                transform: 'translateX(-50%)',
+                pointerEvents: 'none',
+                opacity: 0.85,
+                zIndex: 'var(--pixel-overlay-z)',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '16px',
+                  fontStyle: isSub ? 'italic' : undefined,
+                  color: 'var(--vscode-foreground)',
+                  whiteSpace: 'nowrap',
+                  textShadow: '1px 1px 0 var(--pixel-bg), -1px -1px 0 var(--pixel-bg), 1px -1px 0 var(--pixel-bg), -1px 1px 0 var(--pixel-bg)',
+                }}
+              >
+                {activityText}
+              </span>
+            </div>
+          )
+        }
+
+        // Full label — bordered with dot, folder name, etc.
         const tools = agentTools[id]
         const hasPermission = subHasPermission || tools?.some((t) => t.permissionWait && !t.done)
         const hasActiveTools = tools?.some((t) => !t.done)

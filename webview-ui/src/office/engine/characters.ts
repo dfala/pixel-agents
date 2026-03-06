@@ -1,7 +1,10 @@
 import { CharacterState, Direction, TILE_SIZE } from '../types.js'
-import type { Character, Seat, SpriteData, TileType as TileTypeVal } from '../types.js'
+import type { Character, Seat, SpriteData, TileType as TileTypeVal, PlacedFurniture } from '../types.js'
 import type { CharacterSprites } from '../sprites/spriteData.js'
-import { findPath } from '../layout/tileMap.js'
+import { findPath, isWalkable } from '../layout/tileMap.js'
+import { getCatalogEntry } from '../layout/furnitureCatalog.js'
+import { pokePet } from './pet.js'
+import type { Pet } from './pet.js'
 import {
   WALK_SPEED_PX_PER_SEC,
   WALK_FRAME_DURATION_SEC,
@@ -12,6 +15,13 @@ import {
   WANDER_MOVES_BEFORE_REST_MAX,
   SEAT_REST_MIN_SEC,
   SEAT_REST_MAX_SEC,
+  BREAK_VISIT_PAUSE_MIN_SEC,
+  BREAK_VISIT_PAUSE_MAX_SEC,
+  IDLE_DESTINATION_RANDOM_WEIGHT,
+  IDLE_DESTINATION_BREAK_WEIGHT,
+  PET_VISIT_PRE_POKE_PAUSE_SEC,
+  PET_VISIT_POST_POKE_PAUSE_SEC,
+  BREAK_FURNITURE_TYPES,
 } from '../../constants.js'
 
 /** Tools that show reading animation instead of typing */
@@ -78,7 +88,113 @@ export function createCharacter(
     matrixEffect: null,
     matrixEffectTimer: 0,
     matrixEffectSeeds: [],
+    idleVisitType: null,
+    idleVisitTimer: 0,
+    idleVisitPokedPet: false,
   }
+}
+
+/** Find an adjacent walkable tile next to a furniture footprint */
+function findAdjacentWalkableTile(
+  col: number,
+  row: number,
+  footprintW: number,
+  footprintH: number,
+  tileMap: TileTypeVal[][],
+  blockedTiles: Set<string>,
+): { col: number; row: number } | null {
+  // Check tiles along the front (bottom) edge first, then sides, then back
+  const candidates: Array<{ col: number; row: number }> = []
+  // Front row (below furniture)
+  for (let c = col; c < col + footprintW; c++) {
+    candidates.push({ col: c, row: row + footprintH })
+  }
+  // Left and right sides
+  for (let r = row; r < row + footprintH; r++) {
+    candidates.push({ col: col - 1, row: r })
+    candidates.push({ col: col + footprintW, row: r })
+  }
+  // Back row (above furniture)
+  for (let c = col; c < col + footprintW; c++) {
+    candidates.push({ col: c, row: row - 1 })
+  }
+  for (const t of candidates) {
+    if (isWalkable(t.col, t.row, tileMap, blockedTiles)) {
+      return t
+    }
+  }
+  return null
+}
+
+/** Pick an idle destination with weighted selection: random tile, break furniture, or pet */
+function pickIdleDestination(
+  ch: Character,
+  walkableTiles: Array<{ col: number; row: number }>,
+  furnitureList: PlacedFurniture[],
+  pet: Pet | null,
+  tileMap: TileTypeVal[][],
+  blockedTiles: Set<string>,
+): { path: Array<{ col: number; row: number }>; visitType: 'break' | 'pet' | null } | null {
+  const roll = Math.random()
+
+  if (roll < IDLE_DESTINATION_RANDOM_WEIGHT) {
+    // 60% — random walkable tile (existing behavior)
+    return pickRandomTile(ch, walkableTiles, tileMap, blockedTiles)
+  }
+
+  if (roll < IDLE_DESTINATION_RANDOM_WEIGHT + IDLE_DESTINATION_BREAK_WEIGHT) {
+    // 25% — break furniture
+    const breakItems = furnitureList.filter((item) => BREAK_FURNITURE_TYPES.has(item.type))
+    if (breakItems.length > 0) {
+      const target = breakItems[Math.floor(Math.random() * breakItems.length)]
+      const entry = getCatalogEntry(target.type)
+      if (entry) {
+        const adj = findAdjacentWalkableTile(
+          target.col, target.row, entry.footprintW, entry.footprintH,
+          tileMap, blockedTiles,
+        )
+        if (adj) {
+          const path = findPath(ch.tileCol, ch.tileRow, adj.col, adj.row, tileMap, blockedTiles)
+          if (path.length > 0) {
+            return { path, visitType: 'break' }
+          }
+        }
+      }
+    }
+    // Fallback to random tile
+    return pickRandomTile(ch, walkableTiles, tileMap, blockedTiles)
+  }
+
+  // 15% — pet raccoon
+  if (pet && pet.enabled) {
+    const petCol = Math.floor(pet.x / TILE_SIZE)
+    const petRow = Math.floor(pet.y / TILE_SIZE)
+    const adj = findAdjacentWalkableTile(petCol, petRow, 1, 1, tileMap, blockedTiles)
+    if (adj) {
+      const path = findPath(ch.tileCol, ch.tileRow, adj.col, adj.row, tileMap, blockedTiles)
+      if (path.length > 0) {
+        return { path, visitType: 'pet' }
+      }
+    }
+  }
+  // Fallback to random tile
+  return pickRandomTile(ch, walkableTiles, tileMap, blockedTiles)
+}
+
+/** Pick a random walkable tile as an idle destination */
+function pickRandomTile(
+  ch: Character,
+  walkableTiles: Array<{ col: number; row: number }>,
+  tileMap: TileTypeVal[][],
+  blockedTiles: Set<string>,
+): { path: Array<{ col: number; row: number }>; visitType: null } | null {
+  if (walkableTiles.length === 0) return null
+  const target = walkableTiles[Math.floor(Math.random() * walkableTiles.length)]
+  const path = findPath(ch.tileCol, ch.tileRow, target.col, target.row, tileMap, blockedTiles)
+  if (path.length > 0) {
+    return { path, visitType: null }
+  }
+  return null
 }
 
 export function updateCharacter(
@@ -88,6 +204,8 @@ export function updateCharacter(
   seats: Map<string, Seat>,
   tileMap: TileTypeVal[][],
   blockedTiles: Set<string>,
+  furnitureList: PlacedFurniture[],
+  pet: Pet | null,
 ): void {
   ch.frameTimer += dt
 
@@ -146,6 +264,26 @@ export function updateCharacter(
         }
         break
       }
+      // Pet visit interaction timer
+      if (ch.idleVisitType === 'pet') {
+        ch.idleVisitTimer -= dt
+        if (ch.idleVisitTimer <= 0) {
+          if (!ch.idleVisitPokedPet) {
+            // Poke the pet
+            if (pet && pet.enabled) {
+              pokePet(pet, walkableTiles, tileMap, blockedTiles)
+            }
+            ch.idleVisitPokedPet = true
+            ch.idleVisitTimer = PET_VISIT_POST_POKE_PAUSE_SEC
+          } else {
+            // Done watching — resume normal wander
+            ch.idleVisitType = null
+            ch.idleVisitPokedPet = false
+            ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC)
+          }
+        }
+        break // Skip normal wander logic while visiting pet
+      }
       // Countdown wander timer
       ch.wanderTimer -= dt
       if (ch.wanderTimer <= 0) {
@@ -164,17 +302,15 @@ export function updateCharacter(
             }
           }
         }
-        if (walkableTiles.length > 0) {
-          const target = walkableTiles[Math.floor(Math.random() * walkableTiles.length)]
-          const path = findPath(ch.tileCol, ch.tileRow, target.col, target.row, tileMap, blockedTiles)
-          if (path.length > 0) {
-            ch.path = path
-            ch.moveProgress = 0
-            ch.state = CharacterState.WALK
-            ch.frame = 0
-            ch.frameTimer = 0
-            ch.wanderCount++
-          }
+        const dest = pickIdleDestination(ch, walkableTiles, furnitureList, pet, tileMap, blockedTiles)
+        if (dest) {
+          ch.path = dest.path
+          ch.moveProgress = 0
+          ch.state = CharacterState.WALK
+          ch.frame = 0
+          ch.frameTimer = 0
+          ch.wanderCount++
+          ch.idleVisitType = dest.visitType
         }
         ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC)
       }
@@ -227,6 +363,24 @@ export function updateCharacter(
               ch.frameTimer = 0
               break
             }
+          }
+          // Handle break furniture visit arrival
+          if (ch.idleVisitType === 'break') {
+            ch.state = CharacterState.IDLE
+            ch.wanderTimer = randomRange(BREAK_VISIT_PAUSE_MIN_SEC, BREAK_VISIT_PAUSE_MAX_SEC)
+            ch.idleVisitType = null
+            ch.frame = 0
+            ch.frameTimer = 0
+            break
+          }
+          // Handle pet visit arrival
+          if (ch.idleVisitType === 'pet') {
+            ch.state = CharacterState.IDLE
+            ch.idleVisitTimer = PET_VISIT_PRE_POKE_PAUSE_SEC
+            ch.idleVisitPokedPet = false
+            ch.frame = 0
+            ch.frameTimer = 0
+            break
           }
           ch.state = CharacterState.IDLE
           ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC)

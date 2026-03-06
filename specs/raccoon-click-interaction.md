@@ -1,5 +1,7 @@
 # Raccoon Click Interaction
 
+**Status: Implemented**
+
 **Tap the raccoon to wake it up, startle it, or get its attention.**
 
 Clicking the pet raccoon interrupts its current behavior and triggers a reaction based on what it was doing. A sleeping raccoon wakes up and walks around. A wandering raccoon gets startled and does zoomies. The raccoon always reacts — it never ignores you.

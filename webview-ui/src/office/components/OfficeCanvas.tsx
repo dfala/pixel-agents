@@ -35,9 +35,13 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const offsetRef = useRef({ x: 0, y: 0 })
-  // Middle-mouse pan state (imperative, no re-renders)
+  // Middle-mouse / space+click pan state (imperative, no re-renders)
   const isPanningRef = useRef(false)
   const panStartRef = useRef({ mouseX: 0, mouseY: 0, panX: 0, panY: 0 })
+  // Space key held state for space+click panning
+  const isSpaceHeldRef = useRef(false)
+  // Suppresses the click event that fires after a space+click pan release
+  const wasPanningRef = useRef(false)
   // Delete/rotate button bounds (updated each frame by renderer)
   const deleteButtonBoundsRef = useRef<DeleteButtonBounds | null>(null)
   const rotateButtonBoundsRef = useRef<RotateButtonBounds | null>(null)
@@ -231,9 +235,45 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
       },
     })
 
+    // Space key listeners for space+click panning
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === 'Space' && !e.repeat) {
+        // Don't hijack space if focus is in an input element
+        if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
+        e.preventDefault()
+        isSpaceHeldRef.current = true
+        if (!isPanningRef.current) {
+          canvas.style.cursor = 'grab'
+        }
+      }
+    }
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === 'Space') {
+        isSpaceHeldRef.current = false
+        if (!isPanningRef.current) {
+          canvas.style.cursor = isEditMode ? 'crosshair' : 'default'
+        }
+      }
+    }
+    // Blur resets space state (e.g. user Alt-Tabs while holding space)
+    const handleWindowBlur = () => {
+      if (isSpaceHeldRef.current) {
+        isSpaceHeldRef.current = false
+        if (!isPanningRef.current) {
+          canvas.style.cursor = isEditMode ? 'crosshair' : 'default'
+        }
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    window.addEventListener('keyup', handleKeyUp)
+    window.addEventListener('blur', handleWindowBlur)
+
     return () => {
       stop()
       observer.disconnect()
+      window.removeEventListener('keydown', handleKeyDown)
+      window.removeEventListener('keyup', handleKeyUp)
+      window.removeEventListener('blur', handleWindowBlur)
     }
   }, [officeState, resizeCanvas, isEditMode, editorState, _editorTick, zoom, panRef])
 
@@ -408,8 +448,8 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
     (e: React.MouseEvent) => {
       unlockAudio()
       unlockMusic()
-      // Middle mouse button (button 1) starts panning
-      if (e.button === 1) {
+      // Middle mouse button (button 1) or Space+left-click starts panning
+      if (e.button === 1 || (e.button === 0 && isSpaceHeldRef.current)) {
         e.preventDefault()
         // Break camera follow on manual pan
         officeState.cameraFollowId = null
@@ -495,10 +535,12 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
 
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
-      if (e.button === 1) {
+      if (e.button === 1 || (e.button === 0 && isPanningRef.current)) {
         isPanningRef.current = false
+        // Suppress the click event that follows a space+click pan release
+        if (e.button === 0) wasPanningRef.current = true
         const canvas = canvasRef.current
-        if (canvas) canvas.style.cursor = isEditMode ? 'crosshair' : 'default'
+        if (canvas) canvas.style.cursor = isSpaceHeldRef.current ? 'grab' : (isEditMode ? 'crosshair' : 'default')
         return
       }
       if (e.button === 2) {
@@ -549,6 +591,11 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
+      // Suppress click that follows a space+click pan release
+      if (wasPanningRef.current) {
+        wasPanningRef.current = false
+        return
+      }
       if (isEditMode) return // handled by mouseDown/mouseUp
       const pos = screenToWorld(e.clientX, e.clientY)
       if (!pos) return
@@ -626,6 +673,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
 
   const handleMouseLeave = useCallback(() => {
     isPanningRef.current = false
+    isSpaceHeldRef.current = false
     isEraseDraggingRef.current = false
     editorState.isDragging = false
     editorState.wallDragAdding = null
