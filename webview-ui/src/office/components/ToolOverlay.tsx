@@ -114,37 +114,7 @@ export function ToolOverlay({
           activityText = getActivityText(id, agentTools, ch.isActive)
         }
 
-        // Compact label — minimal floating text only
-        if (isCompact) {
-          return (
-            <div
-              key={id}
-              style={{
-                position: 'absolute',
-                left: screenX,
-                top: screenY - 24,
-                transform: 'translateX(-50%)',
-                pointerEvents: 'none',
-                opacity: 0.85,
-                zIndex: 'var(--pixel-overlay-z)',
-              }}
-            >
-              <span
-                style={{
-                  fontSize: '16px',
-                  fontStyle: isSub ? 'italic' : undefined,
-                  color: 'var(--vscode-foreground)',
-                  whiteSpace: 'nowrap',
-                  textShadow: '1px 1px 0 var(--pixel-bg), -1px -1px 0 var(--pixel-bg), 1px -1px 0 var(--pixel-bg), -1px 1px 0 var(--pixel-bg)',
-                }}
-              >
-                {activityText}
-              </span>
-            </div>
-          )
-        }
-
-        // Full label — bordered with dot, folder name, etc.
+        // Resolve status dot color
         const tools = agentTools[id]
         const hasPermission = subHasPermission || tools?.some((t) => t.permissionWait && !t.done)
         const hasActiveTools = tools?.some((t) => !t.done)
@@ -169,6 +139,7 @@ export function ToolOverlay({
               flexDirection: 'column',
               alignItems: 'center',
               pointerEvents: isSelected ? 'auto' : 'none',
+              opacity: isCompact ? 0.85 : 1,
               zIndex: isSelected ? 'var(--pixel-overlay-selected-z)' : 'var(--pixel-overlay-z)',
             }}
           >
@@ -176,13 +147,13 @@ export function ToolOverlay({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 5,
+                gap: isCompact ? 4 : 5,
                 background: 'var(--pixel-bg)',
                 border: isSelected
                   ? '2px solid var(--pixel-border-light)'
                   : '2px solid var(--pixel-border)',
                 borderRadius: 0,
-                padding: '3px 8px',
+                padding: isCompact ? '2px 6px' : '3px 8px',
                 boxShadow: 'var(--pixel-shadow)',
                 whiteSpace: 'nowrap',
                 maxWidth: 220,
@@ -203,7 +174,7 @@ export function ToolOverlay({
               <div style={{ overflow: 'hidden' }}>
                 <span
                   style={{
-                    fontSize: isSub ? '20px' : '22px',
+                    fontSize: isCompact ? '16px' : isSub ? '20px' : '22px',
                     fontStyle: isSub ? 'italic' : undefined,
                     color: 'var(--vscode-foreground)',
                     overflow: 'hidden',
@@ -213,7 +184,7 @@ export function ToolOverlay({
                 >
                   {activityText}
                 </span>
-                {ch.folderName && (
+                {!isCompact && ch.folderName && (
                   <span
                     style={{
                       fontSize: '16px',
