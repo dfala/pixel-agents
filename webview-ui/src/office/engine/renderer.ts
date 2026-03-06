@@ -4,6 +4,9 @@ import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js'
 import { getCharacterSprites, BUBBLE_PERMISSION_SPRITE, BUBBLE_WAITING_SPRITE } from '../sprites/spriteData.js'
 import { getCharacterSprite } from './characters.js'
 import { renderMatrixEffect } from './matrixEffect.js'
+import { getPetSprite, PetState } from './pet.js'
+import type { Pet } from './pet.js'
+import { getPetSprites, PET_SLEEP_BUBBLE } from '../sprites/petSprites.js'
 import { getColorizedFloorSprite, hasFloorSprites, WALL_COLOR } from '../floorTiles.js'
 import { hasWallSprites, getWallInstances, wallColorToHex } from '../wallTiles.js'
 import {
@@ -38,6 +41,8 @@ import {
   SELECTION_HIGHLIGHT_COLOR,
   DELETE_BUTTON_BG,
   ROTATE_BUTTON_BG,
+  PET_Z_SORT_OFFSET,
+  PET_SLEEP_BUBBLE_OFFSET_PX,
 } from '../../constants.js'
 
 // ── Render functions ────────────────────────────────────────────
@@ -103,6 +108,7 @@ export function renderScene(
   zoom: number,
   selectedAgentId: number | null,
   hoveredAgentId: number | null,
+  pet?: Pet | null,
 ): void {
   const drawables: ZDrawable[] = []
 
@@ -176,6 +182,37 @@ export function renderScene(
         c.drawImage(cached, drawX, drawY)
       },
     })
+  }
+
+  // Pet companion
+  if (pet && pet.enabled) {
+    const petSprites = getPetSprites()
+    const petSpriteData = getPetSprite(pet, petSprites)
+    const petCached = getCachedSprite(petSpriteData, zoom)
+    // Pet anchored at bottom-center
+    const petDrawX = Math.round(offsetX + pet.x * zoom - petCached.width / 2)
+    const petDrawY = Math.round(offsetY + pet.y * zoom - petCached.height)
+    const petZY = pet.y + TILE_SIZE / 2 + PET_Z_SORT_OFFSET
+
+    drawables.push({
+      zY: petZY,
+      draw: (c) => {
+        c.drawImage(petCached, petDrawX, petDrawY)
+      },
+    })
+
+    // Sleep zzZ bubble above sleeping pet
+    if (pet.state === PetState.SLEEP) {
+      const bubbleCached = getCachedSprite(PET_SLEEP_BUBBLE, zoom)
+      const bubbleX = Math.round(offsetX + pet.x * zoom - bubbleCached.width / 2 + 3 * zoom)
+      const bubbleY = Math.round(offsetY + (pet.y - PET_SLEEP_BUBBLE_OFFSET_PX) * zoom - bubbleCached.height)
+      drawables.push({
+        zY: petZY + 0.01, // just above the pet
+        draw: (c) => {
+          c.drawImage(bubbleCached, bubbleX, bubbleY)
+        },
+      })
+    }
   }
 
   // Sort by Y (lower = in front = drawn later)
@@ -541,6 +578,7 @@ export function renderFrame(
   tileColors?: Array<FloorColor | null>,
   layoutCols?: number,
   layoutRows?: number,
+  pet?: Pet | null,
 ): { offsetX: number; offsetY: number } {
   // Clear
   ctx.clearRect(0, 0, canvasWidth, canvasHeight)
@@ -571,10 +609,10 @@ export function renderFrame(
     ? [...wallInstances, ...furniture]
     : furniture
 
-  // Draw walls + furniture + characters (z-sorted)
+  // Draw walls + furniture + characters + pet (z-sorted)
   const selectedId = selection?.selectedAgentId ?? null
   const hoveredId = selection?.hoveredAgentId ?? null
-  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId)
+  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId, pet)
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom)

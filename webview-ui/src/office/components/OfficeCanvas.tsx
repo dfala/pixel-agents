@@ -10,6 +10,7 @@ import { getCatalogEntry, isRotatable } from '../layout/furnitureCatalog.js'
 import { canPlaceFurniture, getWallPlacementRow } from '../editor/editorActions.js'
 import { vscode } from '../../wsApi.js'
 import { unlockAudio } from '../../notificationSound.js'
+import { unlockMusic } from '../../backgroundMusic.js'
 
 interface OfficeCanvasProps {
   officeState: OfficeState
@@ -218,6 +219,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           officeState.getLayout().tileColors,
           officeState.getLayout().cols,
           officeState.getLayout().rows,
+          officeState.pet,
         )
         offsetRef.current = { x: offsetX, y: offsetY }
 
@@ -401,6 +403,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       unlockAudio()
+      unlockMusic()
       // Middle mouse button (button 1) starts panning
       if (e.button === 1) {
         e.preventDefault()

@@ -112,3 +112,24 @@ export const CHARACTER_HIT_HALF_WIDTH = 8
 export const CHARACTER_HIT_HEIGHT = 24
 export const TOOL_OVERLAY_VERTICAL_OFFSET = 32
 export const PULSE_ANIMATION_DURATION_SEC = 1.5
+
+// ── Pet ─────────────────────────────────────────────────────────
+export const PET_WALK_SPEED_PX_PER_SEC = 32          // slower than agents (48)
+export const PET_WALK_FRAME_DURATION_SEC = 0.2        // slower walk cycle
+export const PET_IDLE_FRAME_DURATION_SEC = 0.5        // slow idle breathing
+export const PET_WANDER_PAUSE_MIN_SEC = 3.0
+export const PET_WANDER_PAUSE_MAX_SEC = 12.0
+export const PET_WANDER_MOVES_BEFORE_CHANGE = 4      // wanders before switching behavior
+export const PET_FOLLOW_DISTANCE_TILES = 2            // stay 2 tiles from target agent
+export const PET_FOLLOW_REPATH_SEC = 1.5              // repath to agent every N seconds
+export const PET_FOLLOW_DURATION_MIN_SEC = 15.0
+export const PET_FOLLOW_DURATION_MAX_SEC = 40.0
+export const PET_SLEEP_DURATION_MIN_SEC = 30.0
+export const PET_SLEEP_DURATION_MAX_SEC = 90.0
+export const PET_PLAY_DURATION_SEC = 3.0
+export const PET_PLAY_SPEED_PX_PER_SEC = 72           // fast zoomies!
+export const PET_SPRITE_SIZE = 10                      // 10×10 pixel sprites
+export const PET_Z_SORT_OFFSET = 0.3                  // slightly in front of same-row items
+export const PET_HIT_HALF_WIDTH = 5
+export const PET_HIT_HEIGHT = 10
+export const PET_SLEEP_BUBBLE_OFFSET_PX = 10          // bubble position above sleeping pet

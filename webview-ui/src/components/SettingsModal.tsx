@@ -7,6 +7,8 @@ interface SettingsModalProps {
   onClose: () => void
   isDebugMode: boolean
   onToggleDebugMode: () => void
+  petEnabled: boolean
+  onTogglePet: () => void
 }
 
 const menuItemBase: React.CSSProperties = {
@@ -24,7 +26,7 @@ const menuItemBase: React.CSSProperties = {
   textAlign: 'left',
 }
 
-export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode, petEnabled, onTogglePet }: SettingsModalProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [soundLocal, setSoundLocal] = useState(isSoundEnabled)
   const importInputRef = useRef<HTMLInputElement>(null)
@@ -194,6 +196,35 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode 
             }}
           >
             {soundLocal ? 'X' : ''}
+          </span>
+        </button>
+        <button
+          onClick={onTogglePet}
+          onMouseEnter={() => setHovered('pet')}
+          onMouseLeave={() => setHovered(null)}
+          style={{
+            ...menuItemBase,
+            background: hovered === 'pet' ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+          }}
+        >
+          <span>Office Raccoon</span>
+          <span
+            style={{
+              width: 14,
+              height: 14,
+              border: '2px solid rgba(255, 255, 255, 0.5)',
+              borderRadius: 0,
+              background: petEnabled ? 'rgba(90, 140, 255, 0.8)' : 'transparent',
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '12px',
+              lineHeight: 1,
+              color: '#fff',
+            }}
+          >
+            {petEnabled ? 'X' : ''}
           </span>
         </button>
         <button

@@ -15,7 +15,7 @@ import {
 import type { LoadedWallTiles, LoadedFloorTiles, LoadedCharacterSprites } from './assetLoader.js';
 import { loadLayout, writeLayoutToFile, watchLayoutFile } from './layoutPersistence.js';
 import type { LayoutWatcher } from './layoutPersistence.js';
-import { readState, updateAgentSeats, updateSoundEnabled } from './statePersistence.js';
+import { readState, updateAgentSeats, updateSoundEnabled, updateMusicSettings, updatePetEnabled } from './statePersistence.js';
 
 // ── Shared state ─────────────────────────────────────────────
 
@@ -138,7 +138,13 @@ function sendInitSequence(ws: WebSocket, assetsRoot: string): void {
 	}
 
 	// 7. Settings
-	sendTo(ws, { type: 'settingsLoaded', soundEnabled: state.soundEnabled });
+	sendTo(ws, {
+		type: 'settingsLoaded',
+		soundEnabled: state.soundEnabled,
+		musicEnabled: state.musicEnabled,
+		musicVolume: state.musicVolume,
+		petEnabled: state.petEnabled,
+	});
 }
 
 // ── Client message handling ──────────────────────────────────
@@ -167,6 +173,17 @@ function handleClientMessage(ws: WebSocket, msg: unknown, assetsRoot: string): v
 		case 'setSoundEnabled': {
 			const enabled = data.enabled as boolean;
 			updateSoundEnabled(enabled);
+			break;
+		}
+		case 'setMusicEnabled': {
+			const enabled = data.enabled as boolean;
+			const volume = data.volume as number;
+			updateMusicSettings(enabled, volume);
+			break;
+		}
+		case 'setPetEnabled': {
+			const enabled = data.enabled as boolean;
+			updatePetEnabled(enabled);
 			break;
 		}
 	}

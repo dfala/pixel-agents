@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { OfficeState } from './office/engine/officeState.js'
 import { OfficeCanvas } from './office/components/OfficeCanvas.js'
 import { ToolOverlay } from './office/components/ToolOverlay.js'
@@ -13,6 +13,7 @@ import { useEditorKeyboard } from './hooks/useEditorKeyboard.js'
 import { ZoomControls } from './components/ZoomControls.js'
 import { BottomToolbar } from './components/BottomToolbar.js'
 import { DebugView } from './components/DebugView.js'
+import { vscode } from './wsApi.js'
 
 // Game state lives outside React — updated imperatively by message handlers
 const officeStateRef = { current: null as OfficeState | null }
@@ -120,11 +121,37 @@ function App() {
 
   const isEditDirty = useCallback(() => editor.isEditMode && editor.isDirty, [editor.isEditMode, editor.isDirty])
 
-  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
+  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, petEnabled } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
 
   const [isDebugMode, setIsDebugMode] = useState(false)
+  const [petOn, setPetOn] = useState(false)
+
+  // Sync pet state from server on initial settings load
+  useEffect(() => {
+    setPetOn(petEnabled)
+    const os = getOfficeState()
+    if (petEnabled) {
+      os.enablePet()
+    } else {
+      os.disablePet()
+    }
+  }, [petEnabled])
 
   const handleToggleDebugMode = useCallback(() => setIsDebugMode((prev) => !prev), [])
+
+  const handleTogglePet = useCallback(() => {
+    setPetOn((prev) => {
+      const newVal = !prev
+      const os = getOfficeState()
+      vscode.postMessage({ type: 'setPetEnabled', enabled: newVal })
+      if (newVal) {
+        os.enablePet()
+      } else {
+        os.disablePet()
+      }
+      return newVal
+    })
+  }, [])
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -216,6 +243,8 @@ function App() {
         onToggleEditMode={editor.handleToggleEditMode}
         isDebugMode={isDebugMode}
         onToggleDebugMode={handleToggleDebugMode}
+        petEnabled={petOn}
+        onTogglePet={handleTogglePet}
       />
 
       {editor.isEditMode && editor.isDirty && (

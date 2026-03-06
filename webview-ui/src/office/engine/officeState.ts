@@ -16,6 +16,8 @@ import {
 import type { Character, Seat, FurnitureInstance, TileType as TileTypeVal, OfficeLayout, PlacedFurniture } from '../types.js'
 import { createCharacter, updateCharacter } from './characters.js'
 import { matrixEffectSeeds } from './matrixEffect.js'
+import { createPet, updatePet } from './pet.js'
+import type { Pet } from './pet.js'
 import { isWalkable, getWalkableTiles, findPath } from '../layout/tileMap.js'
 import {
   createDefaultLayout,
@@ -43,6 +45,8 @@ export class OfficeState {
   /** Reverse lookup: sub-agent character ID → parent info */
   subagentMeta: Map<number, { parentAgentId: number; parentToolId: string }> = new Map()
   private nextSubagentId = -1
+  /** Office pet companion (cat) */
+  pet: Pet | null = null
 
   constructor(layout?: OfficeLayout) {
     this.layout = layout || createDefaultLayout()
@@ -122,6 +126,30 @@ export class OfficeState {
       if (ch.seatId) continue // seated characters are fine
       if (ch.tileCol < 0 || ch.tileCol >= layout.cols || ch.tileRow < 0 || ch.tileRow >= layout.rows) {
         this.relocateCharacterToWalkable(ch)
+      }
+    }
+
+    // Relocate pet if needed
+    if (this.pet && this.pet.enabled) {
+      if (shift && (shift.col !== 0 || shift.row !== 0)) {
+        this.pet.tileCol += shift.col
+        this.pet.tileRow += shift.row
+        this.pet.x += shift.col * TILE_SIZE
+        this.pet.y += shift.row * TILE_SIZE
+        this.pet.path = []
+        this.pet.moveProgress = 0
+      }
+      if (this.pet.tileCol < 0 || this.pet.tileCol >= layout.cols ||
+          this.pet.tileRow < 0 || this.pet.tileRow >= layout.rows) {
+        if (this.walkableTiles.length > 0) {
+          const spawn = this.walkableTiles[Math.floor(Math.random() * this.walkableTiles.length)]
+          this.pet.tileCol = spawn.col
+          this.pet.tileRow = spawn.row
+          this.pet.x = spawn.col * TILE_SIZE + TILE_SIZE / 2
+          this.pet.y = spawn.row * TILE_SIZE + TILE_SIZE / 2
+          this.pet.path = []
+          this.pet.moveProgress = 0
+        }
       }
     }
   }
@@ -613,6 +641,32 @@ export class OfficeState {
     }
   }
 
+  // ── Pet companion ───────────────────────────────────────────────
+
+  /** Enable the pet companion — spawns at a random walkable tile */
+  enablePet(): void {
+    if (this.pet) {
+      this.pet.enabled = true
+      return
+    }
+    const spawn = this.walkableTiles.length > 0
+      ? this.walkableTiles[Math.floor(Math.random() * this.walkableTiles.length)]
+      : { col: 1, row: 1 }
+    this.pet = createPet(spawn.col, spawn.row)
+  }
+
+  /** Disable the pet companion */
+  disablePet(): void {
+    if (this.pet) {
+      this.pet.enabled = false
+    }
+  }
+
+  /** Check if the pet is currently enabled */
+  isPetEnabled(): boolean {
+    return this.pet !== null && this.pet.enabled
+  }
+
   update(dt: number): void {
     const toDelete: number[] = []
     for (const ch of this.characters.values()) {
@@ -650,6 +704,11 @@ export class OfficeState {
     // Remove characters that finished despawn
     for (const id of toDelete) {
       this.characters.delete(id)
+    }
+
+    // Update pet companion
+    if (this.pet && this.pet.enabled) {
+      updatePet(this.pet, dt, this.walkableTiles, this.tileMap, this.blockedTiles, this.characters)
     }
   }
 

@@ -9,6 +9,7 @@ import { setWallSprites } from '../office/wallTiles.js'
 import { setCharacterTemplates } from '../office/sprites/spriteData.js'
 import { vscode, addMessageListener, removeMessageListener } from '../wsApi.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
+import { setMusicEnabled, setMusicVolume } from '../backgroundMusic.js'
 
 export interface SubagentCharacter {
   id: number
@@ -50,6 +51,7 @@ export interface ExtensionMessageState {
   layoutReady: boolean
   loadedAssets?: { catalog: FurnitureAsset[]; sprites: Record<string, string[][]> }
   workspaceFolders: WorkspaceFolder[]
+  petEnabled: boolean
 }
 
 function saveAgentSeats(os: OfficeState): void {
@@ -75,6 +77,7 @@ export function useExtensionMessages(
   const [layoutReady, setLayoutReady] = useState(false)
   const [loadedAssets, setLoadedAssets] = useState<{ catalog: FurnitureAsset[]; sprites: Record<string, string[][]> } | undefined>()
   const [workspaceFolders, setWorkspaceFolders] = useState<WorkspaceFolder[]>([])
+  const [petEnabled, setPetEnabled] = useState(false)
 
   // Track whether initial layout has been loaded (ref to avoid re-render)
   const layoutReadyRef = useRef(false)
@@ -342,6 +345,11 @@ export function useExtensionMessages(
       } else if (msg.type === 'settingsLoaded') {
         const soundOn = msg.soundEnabled as boolean
         setSoundEnabled(soundOn)
+        // Restore music settings (won't autoplay until user gesture)
+        if (msg.musicVolume !== undefined) setMusicVolume(msg.musicVolume as number)
+        if (msg.musicEnabled) setMusicEnabled(true)
+        // Restore pet setting
+        if (msg.petEnabled) setPetEnabled(true)
       } else if (msg.type === 'furnitureAssetsLoaded') {
         try {
           const catalog = msg.catalog as FurnitureAsset[]
@@ -360,5 +368,5 @@ export function useExtensionMessages(
     return () => removeMessageListener(handler)
   }, [getOfficeState])
 
-  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders }
+  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, petEnabled }
 }

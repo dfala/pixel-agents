@@ -5,6 +5,9 @@ import { LAYOUT_FILE_DIR, STATE_FILE_NAME } from './constants.js';
 
 export interface AppState {
 	soundEnabled: boolean;
+	musicEnabled: boolean;
+	musicVolume: number;
+	petEnabled: boolean;
 	agentSeats: Record<string, { palette?: number; hueShift?: number; seatId?: string | null }>;
 }
 
@@ -14,16 +17,20 @@ function getStateFilePath(): string {
 
 export function readState(): AppState {
 	const filePath = getStateFilePath();
+	const defaults: AppState = { soundEnabled: true, musicEnabled: false, musicVolume: 0.3, petEnabled: false, agentSeats: {} };
 	try {
-		if (!fs.existsSync(filePath)) return { soundEnabled: true, agentSeats: {} };
+		if (!fs.existsSync(filePath)) return defaults;
 		const raw = fs.readFileSync(filePath, 'utf-8');
 		const parsed = JSON.parse(raw) as Partial<AppState>;
 		return {
-			soundEnabled: parsed.soundEnabled ?? true,
-			agentSeats: parsed.agentSeats ?? {},
+			soundEnabled: parsed.soundEnabled ?? defaults.soundEnabled,
+			musicEnabled: parsed.musicEnabled ?? defaults.musicEnabled,
+			musicVolume: parsed.musicVolume ?? defaults.musicVolume,
+			petEnabled: parsed.petEnabled ?? defaults.petEnabled,
+			agentSeats: parsed.agentSeats ?? defaults.agentSeats,
 		};
 	} catch {
-		return { soundEnabled: true, agentSeats: {} };
+		return defaults;
 	}
 }
 
@@ -54,5 +61,18 @@ export function updateAgentSeats(
 export function updateSoundEnabled(enabled: boolean): void {
 	const state = readState();
 	state.soundEnabled = enabled;
+	writeState(state);
+}
+
+export function updateMusicSettings(enabled: boolean, volume: number): void {
+	const state = readState();
+	state.musicEnabled = enabled;
+	state.musicVolume = volume;
+	writeState(state);
+}
+
+export function updatePetEnabled(enabled: boolean): void {
+	const state = readState();
+	state.petEnabled = enabled;
 	writeState(state);
 }
