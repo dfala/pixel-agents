@@ -12,6 +12,8 @@ import {
   CHARACTER_SITTING_OFFSET_PX,
   CHARACTER_HIT_HALF_WIDTH,
   CHARACTER_HIT_HEIGHT,
+  PET_HIT_HALF_WIDTH,
+  PET_HIT_HEIGHT,
 } from '../../constants.js'
 import type { Character, Seat, FurnitureInstance, TileType as TileTypeVal, OfficeLayout, PlacedFurniture } from '../types.js'
 import { createCharacter, updateCharacter } from './characters.js'
@@ -735,5 +737,15 @@ export class OfficeState {
       }
     }
     return null
+  }
+
+  /** Check if a world-pixel position hits the pet. */
+  getPetAt(worldX: number, worldY: number): boolean {
+    if (!this.pet || !this.pet.enabled) return false
+    const left = this.pet.x - PET_HIT_HALF_WIDTH
+    const right = this.pet.x + PET_HIT_HALF_WIDTH
+    const top = this.pet.y - PET_HIT_HEIGHT
+    const bottom = this.pet.y
+    return worldX >= left && worldX <= right && worldY >= top && worldY <= bottom
   }
 }

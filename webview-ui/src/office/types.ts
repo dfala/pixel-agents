@@ -81,6 +81,17 @@ export interface ToolActivity {
   permissionWait?: boolean
 }
 
+export interface TranscriptEntry {
+  id: string
+  timestamp: number
+  type: 'assistant_text' | 'tool_call' | 'tool_result' | 'turn_end'
+  text?: string
+  toolName?: string
+  toolArgs?: string
+  output?: string
+  isError?: boolean
+}
+
 export const FurnitureType = {
   // Original hand-drawn sprites (kept for backward compat)
   DESK: 'desk',

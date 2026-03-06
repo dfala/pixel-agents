@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { OfficeState } from '../office/engine/officeState.js'
-import type { OfficeLayout, ToolActivity } from '../office/types.js'
+import type { OfficeLayout, ToolActivity, TranscriptEntry } from '../office/types.js'
 import { extractToolName } from '../office/toolUtils.js'
 import { migrateLayoutColors } from '../office/layout/layoutSerializer.js'
 import { buildDynamicCatalog } from '../office/layout/furnitureCatalog.js'
@@ -10,6 +10,7 @@ import { setCharacterTemplates } from '../office/sprites/spriteData.js'
 import { vscode, addMessageListener, removeMessageListener } from '../wsApi.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
 import { setMusicEnabled, setMusicVolume } from '../backgroundMusic.js'
+import { TRANSCRIPT_MAX_ENTRIES } from '../constants.js'
 
 export interface SubagentCharacter {
   id: number
@@ -52,6 +53,7 @@ export interface ExtensionMessageState {
   loadedAssets?: { catalog: FurnitureAsset[]; sprites: Record<string, string[][]> }
   workspaceFolders: WorkspaceFolder[]
   petEnabled: boolean
+  transcriptBuffers: Record<number, TranscriptEntry[]>
 }
 
 function saveAgentSeats(os: OfficeState): void {
@@ -78,6 +80,7 @@ export function useExtensionMessages(
   const [loadedAssets, setLoadedAssets] = useState<{ catalog: FurnitureAsset[]; sprites: Record<string, string[][]> } | undefined>()
   const [workspaceFolders, setWorkspaceFolders] = useState<WorkspaceFolder[]>([])
   const [petEnabled, setPetEnabled] = useState(false)
+  const [transcriptBuffers, setTranscriptBuffers] = useState<Record<number, TranscriptEntry[]>>({})
 
   // Track whether initial layout has been loaded (ref to avoid re-render)
   const layoutReadyRef = useRef(false)
@@ -139,6 +142,12 @@ export function useExtensionMessages(
           return next
         })
         setSubagentTools((prev) => {
+          if (!(id in prev)) return prev
+          const next = { ...prev }
+          delete next[id]
+          return next
+        })
+        setTranscriptBuffers((prev) => {
           if (!(id in prev)) return prev
           const next = { ...prev }
           delete next[id]
@@ -361,6 +370,21 @@ export function useExtensionMessages(
         } catch (err) {
           console.error(`❌ Webview: Error processing furnitureAssetsLoaded:`, err)
         }
+      } else if (msg.type === 'transcriptBuffer') {
+        const agentId = msg.agentId as number
+        const entries = msg.entries as TranscriptEntry[]
+        setTranscriptBuffers((prev) => ({ ...prev, [agentId]: entries }))
+      } else if (msg.type === 'transcriptEntry') {
+        const agentId = msg.agentId as number
+        const entry = msg.entry as TranscriptEntry
+        setTranscriptBuffers((prev) => {
+          const existing = prev[agentId] || []
+          const updated = [...existing, entry]
+          if (updated.length > TRANSCRIPT_MAX_ENTRIES) {
+            updated.shift()
+          }
+          return { ...prev, [agentId]: updated }
+        })
       }
     }
     addMessageListener(handler)
@@ -368,5 +392,5 @@ export function useExtensionMessages(
     return () => removeMessageListener(handler)
   }, [getOfficeState])
 
-  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, petEnabled }
+  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, petEnabled, transcriptBuffers }
 }

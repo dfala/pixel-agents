@@ -1,3 +1,14 @@
+export interface TranscriptEntry {
+	id: string;
+	timestamp: number;
+	type: 'assistant_text' | 'tool_call' | 'tool_result' | 'turn_end';
+	text?: string;
+	toolName?: string;
+	toolArgs?: string;
+	output?: string;
+	isError?: boolean;
+}
+
 export interface AgentState {
 	id: number;
 	projectDir: string;
@@ -14,4 +25,6 @@ export interface AgentState {
 	permissionSent: boolean;
 	hadToolsInTurn: boolean;
 	lastActivityTime: number;
+	transcriptBuffer: TranscriptEntry[];
+	transcriptSeq: number;
 }

@@ -36,3 +36,9 @@ export const LAYOUT_FILE_POLL_INTERVAL_MS = 2000;
 
 // ── State Persistence ──────────────────────────────────────
 export const STATE_FILE_NAME = 'state.json';
+
+// ── Transcript ──────────────────────────────────────────────
+export const TRANSCRIPT_MAX_ENTRIES = 30;
+export const TRANSCRIPT_ASSISTANT_TEXT_MAX_CHARS = 500;
+export const TRANSCRIPT_TOOL_ARGS_MAX_CHARS = 200;
+export const TRANSCRIPT_TOOL_OUTPUT_MAX_CHARS = 300;

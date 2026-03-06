@@ -127,9 +127,16 @@ export const PET_FOLLOW_DURATION_MAX_SEC = 40.0
 export const PET_SLEEP_DURATION_MIN_SEC = 30.0
 export const PET_SLEEP_DURATION_MAX_SEC = 90.0
 export const PET_PLAY_DURATION_SEC = 3.0
+export const PET_WAKE_DURATION_SEC = 0.8                  // brief pause when woken by click
+
+// ── Transcript Panel ────────────────────────────────────────
+export const TRANSCRIPT_PANEL_WIDTH_PX = 320
+export const TRANSCRIPT_MAX_ENTRIES = 30
+export const TRANSCRIPT_SLIDE_DURATION_MS = 200
+export const TRANSCRIPT_AUTOSCROLL_THRESHOLD_PX = 30
 export const PET_PLAY_SPEED_PX_PER_SEC = 72           // fast zoomies!
 export const PET_SPRITE_SIZE = 10                      // 10×10 pixel sprites
 export const PET_Z_SORT_OFFSET = 0.3                  // slightly in front of same-row items
-export const PET_HIT_HALF_WIDTH = 5
-export const PET_HIT_HEIGHT = 10
+export const PET_HIT_HALF_WIDTH = 8
+export const PET_HIT_HEIGHT = 14
 export const PET_SLEEP_BUBBLE_OFFSET_PX = 10          // bubble position above sleeping pet

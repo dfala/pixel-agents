@@ -137,7 +137,14 @@ function sendInitSequence(ws: WebSocket, assetsRoot: string): void {
 		}
 	}
 
-	// 7. Settings
+	// 7. Transcript buffers for active agents
+	for (const [agentId, agent] of agents) {
+		if (agent.transcriptBuffer.length > 0) {
+			sendTo(ws, { type: 'transcriptBuffer', agentId, entries: agent.transcriptBuffer });
+		}
+	}
+
+	// 8. Settings
 	sendTo(ws, {
 		type: 'settingsLoaded',
 		soundEnabled: state.soundEnabled,
@@ -209,6 +216,8 @@ function createAgent(jsonlFile: string, projectDir: string, projectLabel: string
 		permissionSent: false,
 		hadToolsInTurn: false,
 		lastActivityTime: Date.now(),
+		transcriptBuffer: [],
+		transcriptSeq: 0,
 	};
 
 	// Skip to end of file (don't replay history)

@@ -21,6 +21,7 @@ import {
   PET_SLEEP_DURATION_MAX_SEC,
   PET_PLAY_DURATION_SEC,
   PET_PLAY_SPEED_PX_PER_SEC,
+  PET_WAKE_DURATION_SEC,
 } from '../../constants.js'
 
 // ── Pet State Machine ────────────────────────────────────────────
@@ -32,6 +33,7 @@ export const PetState = {
   PLAY: 'play',
   SIT: 'sit',
   WALK: 'walk',
+  WAKE: 'wake',
 } as const
 export type PetState = (typeof PetState)[keyof typeof PetState]
 
@@ -287,6 +289,16 @@ export function updatePet(
       break
     }
 
+    case PetState.WAKE: {
+      pet.behaviorTimer -= dt
+      if (pet.behaviorTimer <= 0) {
+        pet.state = PetState.WANDER
+        pet.wanderCount = 0
+        pet.behaviorTimer = randomRange(PET_WANDER_PAUSE_MIN_SEC, PET_WANDER_PAUSE_MAX_SEC)
+      }
+      break
+    }
+
     case PetState.WALK: {
       updatePetMovement(pet, dt, false)
       if (pet.path.length === 0) {
@@ -371,6 +383,27 @@ function startPlay(
   }
 }
 
+/** Poke the pet — wake it from sleep or startle it into zoomies */
+export function pokePet(
+  pet: Pet,
+  walkableTiles: Array<{ col: number; row: number }>,
+  tileMap: TileTypeVal[][],
+  blockedTiles: Set<string>,
+): void {
+  if (pet.state === PetState.PLAY || pet.state === PetState.WAKE) return // already reacting
+  if (pet.state === PetState.SLEEP) {
+    // Wake up: brief pause before moving
+    pet.state = PetState.WAKE
+    pet.behaviorTimer = PET_WAKE_DURATION_SEC
+    pet.path = []
+    pet.moveProgress = 0
+    pet.sleepOnArrival = false
+  } else {
+    // Any other state: startled → zoomies
+    startPlay(pet, walkableTiles, tileMap, blockedTiles)
+  }
+}
+
 function transitionToNewBehavior(
   pet: Pet,
   walkableTiles: Array<{ col: number; row: number }>,
@@ -438,6 +471,7 @@ export function getPetSprite(pet: Pet, sprites: PetSprites): SpriteData {
       return sprites.walk[pet.dir][pet.frame % 2]
     case PetState.SLEEP:
       return sprites.sleep[pet.dir]
+    case PetState.WAKE:
     case PetState.SIT:
     case PetState.WANDER:
     case PetState.FOLLOW:

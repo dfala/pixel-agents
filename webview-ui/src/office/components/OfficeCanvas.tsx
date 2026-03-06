@@ -8,6 +8,7 @@ import { TILE_SIZE, EditTool } from '../types.js'
 import { CAMERA_FOLLOW_LERP, CAMERA_FOLLOW_SNAP_THRESHOLD, ZOOM_MIN, ZOOM_MAX, ZOOM_SCROLL_THRESHOLD, PAN_MARGIN_FRACTION } from '../../constants.js'
 import { getCatalogEntry, isRotatable } from '../layout/furnitureCatalog.js'
 import { canPlaceFurniture, getWallPlacementRow } from '../editor/editorActions.js'
+import { pokePet } from '../engine/pet.js'
 import { vscode } from '../../wsApi.js'
 import { unlockAudio } from '../../notificationSound.js'
 import { unlockMusic } from '../../backgroundMusic.js'
@@ -27,9 +28,10 @@ interface OfficeCanvasProps {
   zoom: number
   onZoomChange: (zoom: number) => void
   panRef: React.MutableRefObject<{ x: number; y: number }>
+  onSelectionChange?: (agentId: number | null) => void
 }
 
-export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, onEditorTileAction, onEditorEraseAction, onEditorSelectionChange, onDeleteSelected, onRotateSelected, onDragMove, editorTick: _editorTick, zoom, onZoomChange, panRef }: OfficeCanvasProps) {
+export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, onEditorTileAction, onEditorEraseAction, onEditorSelectionChange, onDeleteSelected, onRotateSelected, onDragMove, editorTick: _editorTick, zoom, onZoomChange, panRef, onSelectionChange }: OfficeCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const offsetRef = useRef({ x: 0, y: 0 })
@@ -380,6 +382,8 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
         let cursor = 'default'
         if (hitId !== null) {
           cursor = 'pointer'
+        } else if (officeState.getPetAt(pos.worldX, pos.worldY)) {
+          cursor = 'pointer'
         } else if (officeState.selectedAgentId !== null && tile) {
           // Check if hovering over a clickable seat (available or own)
           const seatId = officeState.getSeatAtTile(tile.col, tile.row)
@@ -561,7 +565,16 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           officeState.selectedAgentId = hitId
           officeState.cameraFollowId = hitId
         }
+        onSelectionChange?.(officeState.selectedAgentId)
         onClick(hitId) // still focus terminal
+        return
+      }
+
+      // Pet hit — trigger reaction (doesn't affect agent selection)
+      if (officeState.getPetAt(pos.worldX, pos.worldY)) {
+        if (officeState.pet) {
+          pokePet(officeState.pet, officeState.walkableTiles, officeState.tileMap, officeState.blockedTiles)
+        }
         return
       }
 
@@ -581,12 +594,14 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
                   officeState.sendToSeat(officeState.selectedAgentId)
                   officeState.selectedAgentId = null
                   officeState.cameraFollowId = null
+                  onSelectionChange?.(null)
                   return
                 } else if (!seat.assigned) {
                   // Clicked available seat — reassign
                   officeState.reassignSeat(officeState.selectedAgentId, seatId)
                   officeState.selectedAgentId = null
                   officeState.cameraFollowId = null
+                  onSelectionChange?.(null)
                   // Persist seat assignments (exclude sub-agents)
                   const seats: Record<number, { palette: number; seatId: string | null }> = {}
                   for (const ch of officeState.characters.values()) {
@@ -603,9 +618,10 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
         // Clicked empty space — deselect
         officeState.selectedAgentId = null
         officeState.cameraFollowId = null
+        onSelectionChange?.(null)
       }
     },
-    [officeState, onClick, screenToWorld, screenToTile, isEditMode],
+    [officeState, onClick, onSelectionChange, screenToWorld, screenToTile, isEditMode],
   )
 
   const handleMouseLeave = useCallback(() => {

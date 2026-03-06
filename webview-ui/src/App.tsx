@@ -13,6 +13,7 @@ import { useEditorKeyboard } from './hooks/useEditorKeyboard.js'
 import { ZoomControls } from './components/ZoomControls.js'
 import { BottomToolbar } from './components/BottomToolbar.js'
 import { DebugView } from './components/DebugView.js'
+import { TranscriptPanel } from './components/TranscriptPanel.js'
 import { vscode } from './wsApi.js'
 
 // Game state lives outside React — updated imperatively by message handlers
@@ -121,10 +122,22 @@ function App() {
 
   const isEditDirty = useCallback(() => editor.isEditMode && editor.isDirty, [editor.isEditMode, editor.isDirty])
 
-  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, petEnabled } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
+  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, petEnabled, transcriptBuffers } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
 
   const [isDebugMode, setIsDebugMode] = useState(false)
   const [petOn, setPetOn] = useState(false)
+  const [panelAgentId, setPanelAgentId] = useState<number | null>(null)
+
+  const handleSelectionChange = useCallback((agentId: number | null) => {
+    setPanelAgentId(agentId)
+  }, [])
+
+  // Close transcript panel if the displayed agent is removed
+  useEffect(() => {
+    if (panelAgentId !== null && !agents.includes(panelAgentId)) {
+      setPanelAgentId(null)
+    }
+  }, [agents, panelAgentId])
 
   // Sync pet state from server on initial settings load
   useEffect(() => {
@@ -206,6 +219,13 @@ function App() {
           50% { opacity: 0.3; }
         }
         .pixel-agents-pulse { animation: pixel-agents-pulse ${PULSE_ANIMATION_DURATION_SEC}s ease-in-out infinite; }
+        @keyframes transcript-slide-in {
+          from { transform: translateX(100%); }
+          to { transform: translateX(0); }
+        }
+        .transcript-scroll::-webkit-scrollbar { width: 4px; }
+        .transcript-scroll::-webkit-scrollbar-thumb { background: var(--pixel-border); }
+        .transcript-scroll::-webkit-scrollbar-track { background: transparent; }
       `}</style>
 
       <OfficeCanvas
@@ -223,6 +243,7 @@ function App() {
         zoom={editor.zoom}
         onZoomChange={editor.handleZoomChange}
         panRef={editor.panRef}
+        onSelectionChange={handleSelectionChange}
       />
 
       <ZoomControls zoom={editor.zoom} onZoomChange={editor.handleZoomChange} />
@@ -319,6 +340,31 @@ function App() {
           subagentTools={subagentTools}
         />
       )}
+
+      {panelAgentId !== null && (() => {
+        const os = getOfficeState()
+        const ch = os.characters.get(panelAgentId)
+        const agentLabel = ch?.folderName || `Agent ${panelAgentId}`
+        const tools = agentTools[panelAgentId]
+        const hasActiveTools = !!tools?.some((t) => !t.done)
+        const hasPermission = !!tools?.some((t) => t.permissionWait && !t.done)
+
+        return (
+          <TranscriptPanel
+            agentId={panelAgentId}
+            entries={transcriptBuffers[panelAgentId] ?? []}
+            agentLabel={agentLabel}
+            hasActiveTools={hasActiveTools}
+            hasPermission={hasPermission}
+            onClose={() => {
+              const osRef = getOfficeState()
+              osRef.selectedAgentId = null
+              osRef.cameraFollowId = null
+              setPanelAgentId(null)
+            }}
+          />
+        )
+      })()}
     </div>
   )
 }

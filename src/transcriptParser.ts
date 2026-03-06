@@ -1,5 +1,5 @@
 import * as path from 'path';
-import type { AgentState } from './types.js';
+import type { AgentState, TranscriptEntry } from './types.js';
 import {
 	cancelWaitingTimer,
 	startWaitingTimer,
@@ -12,6 +12,10 @@ import {
 	TEXT_IDLE_DELAY_MS,
 	BASH_COMMAND_DISPLAY_MAX_LENGTH,
 	TASK_DESCRIPTION_DISPLAY_MAX_LENGTH,
+	TRANSCRIPT_MAX_ENTRIES,
+	TRANSCRIPT_ASSISTANT_TEXT_MAX_CHARS,
+	TRANSCRIPT_TOOL_ARGS_MAX_CHARS,
+	TRANSCRIPT_TOOL_OUTPUT_MAX_CHARS,
 } from './constants.js';
 
 export const PERMISSION_EXEMPT_TOOLS = new Set(['Task', 'AskUserQuestion']);
@@ -41,6 +45,30 @@ export function formatToolStatus(toolName: string, input: Record<string, unknown
 	}
 }
 
+function pushTranscriptEntry(
+	agent: AgentState,
+	agentId: number,
+	entryType: TranscriptEntry['type'],
+	fields: Partial<TranscriptEntry>,
+	send: (msg: unknown) => void,
+): void {
+	const entry: TranscriptEntry = {
+		id: `${agentId}-${agent.transcriptSeq++}`,
+		timestamp: Date.now(),
+		type: entryType,
+		...fields,
+	};
+	agent.transcriptBuffer.push(entry);
+	if (agent.transcriptBuffer.length > TRANSCRIPT_MAX_ENTRIES) {
+		agent.transcriptBuffer.shift();
+	}
+	send({ type: 'transcriptEntry', agentId, entry });
+}
+
+function truncate(s: string, max: number): string {
+	return s.length > max ? s.slice(0, max) + '\u2026' : s;
+}
+
 export function processTranscriptLine(
 	agentId: number,
 	line: string,
@@ -57,8 +85,22 @@ export function processTranscriptLine(
 		if (record.type === 'assistant' && Array.isArray(record.message?.content)) {
 			const blocks = record.message.content as Array<{
 				type: string; id?: string; name?: string; input?: Record<string, unknown>;
+				text?: string;
 			}>;
 			const hasToolUse = blocks.some(b => b.type === 'tool_use');
+
+			// Transcript: emit assistant_text for any text blocks
+			const textParts: string[] = [];
+			for (const block of blocks) {
+				if (block.type === 'text' && typeof block.text === 'string' && block.text.trim()) {
+					textParts.push(block.text);
+				}
+			}
+			if (textParts.length > 0) {
+				pushTranscriptEntry(agent, agentId, 'assistant_text', {
+					text: truncate(textParts.join('\n'), TRANSCRIPT_ASSISTANT_TEXT_MAX_CHARS),
+				}, send);
+			}
 
 			if (hasToolUse) {
 				cancelWaitingTimer(agentId, waitingTimers);
@@ -83,6 +125,11 @@ export function processTranscriptLine(
 							toolId: block.id,
 							status,
 						});
+						// Transcript: emit tool_call entry
+						pushTranscriptEntry(agent, agentId, 'tool_call', {
+							toolName,
+							toolArgs: truncate(status, TRANSCRIPT_TOOL_ARGS_MAX_CHARS),
+						}, send);
 					}
 				}
 				if (hasNonExemptTool) {
@@ -96,13 +143,35 @@ export function processTranscriptLine(
 		} else if (record.type === 'user') {
 			const content = record.message?.content;
 			if (Array.isArray(content)) {
-				const blocks = content as Array<{ type: string; tool_use_id?: string }>;
+				const blocks = content as Array<{
+					type: string; tool_use_id?: string; content?: unknown; is_error?: boolean;
+				}>;
 				const hasToolResult = blocks.some(b => b.type === 'tool_result');
 				if (hasToolResult) {
 					for (const block of blocks) {
 						if (block.type === 'tool_result' && block.tool_use_id) {
 							console.log(`[Pixel Agents] Agent ${agentId} tool done: ${block.tool_use_id}`);
 							const completedToolId = block.tool_use_id;
+
+							// Transcript: emit tool_result BEFORE clearing tool name
+							const resultToolName = agent.activeToolNames.get(completedToolId) || 'Unknown';
+							let resultOutput = '';
+							if (typeof block.content === 'string') {
+								resultOutput = block.content;
+							} else if (Array.isArray(block.content)) {
+								const textParts: string[] = [];
+								for (const part of block.content as Array<{ type?: string; text?: string }>) {
+									if (part.type === 'text' && typeof part.text === 'string') {
+										textParts.push(part.text);
+									}
+								}
+								resultOutput = textParts.join('\n');
+							}
+							pushTranscriptEntry(agent, agentId, 'tool_result', {
+								toolName: resultToolName,
+								output: truncate(resultOutput, TRANSCRIPT_TOOL_OUTPUT_MAX_CHARS),
+								isError: !!block.is_error,
+							}, send);
 							if (agent.activeToolNames.get(completedToolId) === 'Task') {
 								agent.activeSubagentToolIds.delete(completedToolId);
 								agent.activeSubagentToolNames.delete(completedToolId);
@@ -150,6 +219,9 @@ export function processTranscriptLine(
 				agent.activeSubagentToolNames.clear();
 				send({ type: 'agentToolsClear', id: agentId });
 			}
+
+			// Transcript: emit turn_end marker
+			pushTranscriptEntry(agent, agentId, 'turn_end', {}, send);
 
 			agent.isWaiting = true;
 			agent.permissionSent = false;
