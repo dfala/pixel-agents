@@ -139,7 +139,6 @@ export function ToolOverlay({
               flexDirection: 'column',
               alignItems: 'center',
               pointerEvents: isSelected ? 'auto' : 'none',
-              opacity: isCompact ? 0.85 : 1,
               zIndex: isSelected ? 'var(--pixel-overlay-selected-z)' : 'var(--pixel-overlay-z)',
             }}
           >
@@ -147,13 +146,13 @@ export function ToolOverlay({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: isCompact ? 4 : 5,
+                gap: 5,
                 background: 'var(--pixel-bg)',
                 border: isSelected
                   ? '2px solid var(--pixel-border-light)'
                   : '2px solid var(--pixel-border)',
                 borderRadius: 0,
-                padding: isCompact ? '2px 6px' : '3px 8px',
+                padding: '3px 8px',
                 boxShadow: 'var(--pixel-shadow)',
                 whiteSpace: 'nowrap',
                 maxWidth: 220,
@@ -174,7 +173,7 @@ export function ToolOverlay({
               <div style={{ overflow: 'hidden' }}>
                 <span
                   style={{
-                    fontSize: isCompact ? '16px' : isSub ? '20px' : '22px',
+                    fontSize: isSub ? '20px' : '22px',
                     fontStyle: isSub ? 'italic' : undefined,
                     color: 'var(--vscode-foreground)',
                     overflow: 'hidden',
@@ -184,7 +183,7 @@ export function ToolOverlay({
                 >
                   {activityText}
                 </span>
-                {!isCompact && ch.folderName && (
+                {ch.folderName && (
                   <span
                     style={{
                       fontSize: '16px',
