@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { vscode } from '../wsApi.js'
 import { isSoundEnabled, setSoundEnabled } from '../notificationSound.js'
 import type { WorkspaceInfo } from '../hooks/useExtensionMessages.js'
@@ -75,7 +76,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode,
     onClose()
   }
 
-  return (
+  return createPortal(
     <>
       {/* Hidden file input for import */}
       <input
@@ -95,7 +96,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode,
           width: '100%',
           height: '100%',
           background: 'rgba(0, 0, 0, 0.5)',
-          zIndex: 49,
+          zIndex: 200,
         }}
       />
       {/* Centered modal */}
@@ -105,7 +106,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode,
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          zIndex: 50,
+          zIndex: 201,
           background: 'var(--pixel-bg)',
           border: '2px solid var(--pixel-border)',
           borderRadius: 0,
@@ -261,6 +262,7 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode,
           )}
         </button>
       </div>
-    </>
+    </>,
+    document.body
   )
 }
