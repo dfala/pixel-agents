@@ -46,6 +46,9 @@ import {
   ROTATE_BUTTON_BG,
   PET_Z_SORT_OFFSET,
   PET_SLEEP_BUBBLE_OFFSET_PX,
+  WORKSPACE_BADGE_W,
+  WORKSPACE_BADGE_H,
+  WORKSPACE_BADGE_OFFSET_Y,
 } from '../../constants.js'
 
 // ── Render functions ────────────────────────────────────────────
@@ -179,10 +182,24 @@ export function renderScene(
       })
     }
 
+    const charDrawX = drawX
+    const charDrawY = drawY
+    const charCachedW = cached.width
+    const charCachedH = cached.height
+    const charWorkspaceColor = ch.workspaceColor
     drawables.push({
       zY: charZY,
       draw: (c) => {
-        c.drawImage(cached, drawX, drawY)
+        c.drawImage(cached, charDrawX, charDrawY)
+        // Workspace color badge below character feet
+        if (charWorkspaceColor) {
+          const bw = WORKSPACE_BADGE_W * zoom
+          const bh = WORKSPACE_BADGE_H * zoom
+          const bx = Math.round(charDrawX + charCachedW / 2 - bw / 2)
+          const by = Math.round(charDrawY + charCachedH + WORKSPACE_BADGE_OFFSET_Y * zoom)
+          c.fillStyle = charWorkspaceColor
+          c.fillRect(bx, by, bw, bh)
+        }
       },
     })
   }

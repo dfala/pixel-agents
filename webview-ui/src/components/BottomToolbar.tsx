@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { SettingsModal } from './SettingsModal.js'
 import { isMusicEnabled, setMusicEnabled, getMusicVolume, setMusicVolume, unlockMusic } from '../backgroundMusic.js'
 import { vscode } from '../wsApi.js'
+import type { WorkspaceInfo } from '../hooks/useExtensionMessages.js'
 
 interface BottomToolbarProps {
   isEditMode: boolean
@@ -10,6 +11,7 @@ interface BottomToolbarProps {
   onToggleDebugMode: () => void
   petEnabled: boolean
   onTogglePet: () => void
+  workspaces: WorkspaceInfo[]
 }
 
 const panelStyle: React.CSSProperties = {
@@ -51,6 +53,7 @@ export function BottomToolbar({
   onToggleDebugMode,
   petEnabled,
   onTogglePet,
+  workspaces,
 }: BottomToolbarProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -173,6 +176,7 @@ export function BottomToolbar({
           onToggleDebugMode={onToggleDebugMode}
           petEnabled={petEnabled}
           onTogglePet={onTogglePet}
+          workspaces={workspaces}
         />
       </div>
     </div>

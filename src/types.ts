@@ -27,4 +27,20 @@ export interface AgentState {
 	lastActivityTime: number;
 	transcriptBuffer: TranscriptEntry[];
 	transcriptSeq: number;
+	workspaceColor: string;
+}
+
+export interface WorkspaceConfig {
+	version: 1;
+	workspaces: Array<{
+		projectLabel: string;
+		label?: string;
+		color?: string;
+	}>;
+}
+
+export interface WorkspaceInfo {
+	projectLabel: string;
+	label: string;
+	color: string;
 }

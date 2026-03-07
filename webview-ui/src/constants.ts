@@ -163,3 +163,12 @@ export const EXPRESSION_TIMED_DURATION_SEC = 3
 export const EXPRESSION_FADE_DURATION_SEC = 0.5
 export const EXPRESSION_VERTICAL_OFFSET_PX = 28
 export const EXPRESSION_STATUS_BUBBLE_GAP_PX = -14
+
+// ── Multi-Workspace ─────────────────────────────────────────
+export const WORKSPACE_COLORS = [
+  '#4ec9b0', '#ce9178', '#c586c0', '#9cdcfe',
+  '#dcdcaa', '#f48771', '#89d185', '#d4d4d4',
+]
+export const WORKSPACE_BADGE_W = 4
+export const WORKSPACE_BADGE_H = 2
+export const WORKSPACE_BADGE_OFFSET_Y = 2

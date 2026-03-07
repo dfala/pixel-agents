@@ -114,6 +114,9 @@ export function ToolOverlay({
           activityText = getActivityText(id, agentTools, ch.isActive)
         }
 
+        // Hide "Idle" label when not selected/hovered
+        if (isCompact && activityText === 'Idle') return null
+
         // Resolve status dot color
         const tools = agentTools[id]
         const hasPermission = subHasPermission || tools?.some((t) => t.permissionWait && !t.done)
@@ -190,9 +193,22 @@ export function ToolOverlay({
                       color: 'var(--pixel-text-dim)',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
-                      display: 'block',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
                     }}
                   >
+                    {ch.workspaceColor && (
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          background: ch.workspaceColor,
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
                     {ch.folderName}
                   </span>
                 )}

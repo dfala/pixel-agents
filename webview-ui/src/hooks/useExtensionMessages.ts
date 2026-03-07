@@ -42,6 +42,12 @@ export interface WorkspaceFolder {
   path: string
 }
 
+export interface WorkspaceInfo {
+  projectLabel: string
+  label: string
+  color: string
+}
+
 export interface ExtensionMessageState {
   agents: number[]
   selectedAgent: number | null
@@ -52,6 +58,7 @@ export interface ExtensionMessageState {
   layoutReady: boolean
   loadedAssets?: { catalog: FurnitureAsset[]; sprites: Record<string, string[][]> }
   workspaceFolders: WorkspaceFolder[]
+  workspaces: WorkspaceInfo[]
   petEnabled: boolean
   transcriptBuffers: Record<number, TranscriptEntry[]>
 }
@@ -80,6 +87,7 @@ export function useExtensionMessages(
   const [layoutReady, setLayoutReady] = useState(false)
   const [loadedAssets, setLoadedAssets] = useState<{ catalog: FurnitureAsset[]; sprites: Record<string, string[][]> } | undefined>()
   const [workspaceFolders, setWorkspaceFolders] = useState<WorkspaceFolder[]>([])
+  const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([])
   const [petEnabled, setPetEnabled] = useState(false)
   const [transcriptBuffers, setTranscriptBuffers] = useState<Record<number, TranscriptEntry[]>>({})
 
@@ -88,7 +96,7 @@ export function useExtensionMessages(
 
   useEffect(() => {
     // Buffer agents from existingAgents until layout is loaded
-    let pendingAgents: Array<{ id: number; palette?: number; hueShift?: number; seatId?: string; folderName?: string }> = []
+    let pendingAgents: Array<{ id: number; palette?: number; hueShift?: number; seatId?: string; folderName?: string; workspaceColor?: string }> = []
 
     const handler = (e: MessageEvent) => {
       const msg = e.data
@@ -111,7 +119,7 @@ export function useExtensionMessages(
         }
         // Add buffered agents now that layout (and seats) are correct
         for (const p of pendingAgents) {
-          os.addAgent(p.id, p.palette, p.hueShift, p.seatId, true, p.folderName)
+          os.addAgent(p.id, p.palette, p.hueShift, p.seatId, true, p.folderName, p.workspaceColor)
         }
         pendingAgents = []
         layoutReadyRef.current = true
@@ -121,10 +129,11 @@ export function useExtensionMessages(
         }
       } else if (msg.type === 'agentCreated') {
         const id = msg.id as number
-        const folderName = msg.folderName as string | undefined
+        const workspaceLabel = msg.workspaceLabel as string | undefined
+        const workspaceColor = msg.workspaceColor as string | undefined
         setAgents((prev) => (prev.includes(id) ? prev : [...prev, id]))
         setSelectedAgent(id)
-        os.addAgent(id, undefined, undefined, undefined, undefined, folderName)
+        os.addAgent(id, undefined, undefined, undefined, undefined, workspaceLabel, workspaceColor)
         saveAgentSeats(os)
       } else if (msg.type === 'agentClosed') {
         const id = msg.id as number
@@ -162,10 +171,11 @@ export function useExtensionMessages(
         const incoming = msg.agents as number[]
         const meta = (msg.agentMeta || {}) as Record<number, { palette?: number; hueShift?: number; seatId?: string }>
         const folderNames = (msg.folderNames || {}) as Record<number, string>
+        const workspaceColors = (msg.workspaceColors || {}) as Record<number, string>
         // Buffer agents — they'll be added in layoutLoaded after seats are built
         for (const id of incoming) {
           const m = meta[id]
-          pendingAgents.push({ id, palette: m?.palette, hueShift: m?.hueShift, seatId: m?.seatId, folderName: folderNames[id] })
+          pendingAgents.push({ id, palette: m?.palette, hueShift: m?.hueShift, seatId: m?.seatId, folderName: folderNames[id], workspaceColor: workspaceColors[id] })
         }
         setAgents((prev) => {
           const ids = new Set(prev)
@@ -376,6 +386,25 @@ export function useExtensionMessages(
         if (msg.musicEnabled) setMusicEnabled(true)
         // Restore pet setting
         if (msg.petEnabled) setPetEnabled(true)
+      } else if (msg.type === 'workspacesLoaded') {
+        const incoming = msg.workspaces as WorkspaceInfo[]
+        setWorkspaces(incoming)
+      } else if (msg.type === 'workspaceUpdated') {
+        const projectLabel = msg.projectLabel as string
+        const label = msg.label as string
+        const color = msg.color as string
+        const agentIds = (msg.agentIds || []) as number[]
+        setWorkspaces((prev) =>
+          prev.map((w) => (w.projectLabel === projectLabel ? { ...w, label, color } : w)),
+        )
+        // Update affected characters' folderName + workspaceColor
+        for (const id of agentIds) {
+          const ch = os.characters.get(id)
+          if (ch) {
+            ch.folderName = label
+            ch.workspaceColor = color || undefined
+          }
+        }
       } else if (msg.type === 'furnitureAssetsLoaded') {
         try {
           const catalog = msg.catalog as FurnitureAsset[]
@@ -413,5 +442,5 @@ export function useExtensionMessages(
     return () => removeMessageListener(handler)
   }, [getOfficeState])
 
-  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, petEnabled, transcriptBuffers }
+  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, workspaces, petEnabled, transcriptBuffers }
 }

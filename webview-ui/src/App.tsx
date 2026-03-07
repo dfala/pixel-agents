@@ -122,7 +122,7 @@ function App() {
 
   const isEditDirty = useCallback(() => editor.isEditMode && editor.isDirty, [editor.isEditMode, editor.isDirty])
 
-  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, petEnabled, transcriptBuffers } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
+  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaces, petEnabled, transcriptBuffers } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
 
   const [isDebugMode, setIsDebugMode] = useState(false)
   const [petOn, setPetOn] = useState(false)
@@ -266,6 +266,7 @@ function App() {
         onToggleDebugMode={handleToggleDebugMode}
         petEnabled={petOn}
         onTogglePet={handleTogglePet}
+        workspaces={workspaces}
       />
 
       {editor.isEditMode && editor.isDirty && (

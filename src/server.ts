@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import type { WebSocket } from 'ws';
-import type { AgentState } from './types.js';
+import type { AgentState, WorkspaceInfo } from './types.js';
 import { PROJECT_DISCOVERY_INTERVAL_MS, SESSION_STALENESS_MS } from './constants.js';
 import { startFileWatching, stopFileWatching } from './fileWatcher.js';
 import { scanAllProjects } from './projectScanner.js';
@@ -16,6 +16,8 @@ import type { LoadedWallTiles, LoadedFloorTiles, LoadedCharacterSprites } from '
 import { loadLayout, writeLayoutToFile, watchLayoutFile } from './layoutPersistence.js';
 import type { LayoutWatcher } from './layoutPersistence.js';
 import { readState, updateAgentSeats, updateSoundEnabled, updateMusicSettings, updatePetEnabled } from './statePersistence.js';
+import { readWorkspaceConfig, updateWorkspaceEntry } from './workspacePersistence.js';
+import { resolveWorkspaces, WORKSPACE_COLORS } from './workspaceUtils.js';
 
 // ── Shared state ─────────────────────────────────────────────
 
@@ -30,6 +32,18 @@ const trackedFiles = new Set<string>(); // JSONL files currently being watched
 let nextAgentId = 1;
 let discoveryTimer: ReturnType<typeof setInterval> | null = null;
 let layoutWatcher: LayoutWatcher | null = null;
+let workspaceInfoCache: Map<string, WorkspaceInfo> = new Map();
+
+function refreshWorkspaceCache(): void {
+	const config = readWorkspaceConfig();
+	const projectLabels = [...new Set([...agents.values()].map(a => a.projectLabel))];
+	workspaceInfoCache = resolveWorkspaces(projectLabels, config);
+}
+
+function isMultiWorkspace(): boolean {
+	const unique = new Set([...agents.values()].map(a => a.projectLabel));
+	return unique.size > 1;
+}
 
 // Cached assets (loaded once at startup)
 let cachedFurnitureObj: { catalog: unknown[]; sprites: Record<string, string[][]> } | null = null;
@@ -115,11 +129,24 @@ function sendInitSequence(ws: WebSocket, assetsRoot: string): void {
 	//    can buffer them in pendingAgents; layoutLoaded handler flushes the buffer)
 	const state = readState();
 	const agentIds = Array.from(agents.keys()).sort((a, b) => a - b);
+	const multi = isMultiWorkspace();
+	const folderNames: Record<number, string> = {};
+	const workspaceColors: Record<number, string> = {};
+	for (const [id, agent] of agents) {
+		const wsInfo = workspaceInfoCache.get(agent.projectLabel);
+		if (wsInfo) {
+			folderNames[id] = wsInfo.label;
+			if (multi) {
+				workspaceColors[id] = wsInfo.color;
+			}
+		}
+	}
 	sendTo(ws, {
 		type: 'existingAgents',
 		agents: agentIds,
 		agentMeta: state.agentSeats,
-		folderNames: {},
+		folderNames,
+		workspaceColors,
 	});
 
 	// 6. Layout (triggers agent character creation from the pending buffer)
@@ -151,6 +178,12 @@ function sendInitSequence(ws: WebSocket, assetsRoot: string): void {
 		musicEnabled: state.musicEnabled,
 		musicVolume: state.musicVolume,
 		petEnabled: state.petEnabled,
+	});
+
+	// 9. Workspace list
+	sendTo(ws, {
+		type: 'workspacesLoaded',
+		workspaces: [...workspaceInfoCache.values()],
 	});
 }
 
@@ -193,6 +226,34 @@ function handleClientMessage(ws: WebSocket, msg: unknown, assetsRoot: string): v
 			updatePetEnabled(enabled);
 			break;
 		}
+		case 'updateWorkspace': {
+			const projectLabel = data.projectLabel as string;
+			const label = data.label as string | undefined;
+			const color = data.color as string | undefined;
+			if (projectLabel) {
+				updateWorkspaceEntry(projectLabel, { label, color });
+				refreshWorkspaceCache();
+				const wsInfo = workspaceInfoCache.get(projectLabel);
+				if (wsInfo) {
+					// Update live agents' workspace color and collect affected IDs
+					const affectedIds: number[] = [];
+					for (const [id, agent] of agents) {
+						if (agent.projectLabel === projectLabel) {
+							agent.workspaceColor = wsInfo.color;
+							affectedIds.push(id);
+						}
+					}
+					broadcast({
+						type: 'workspaceUpdated',
+						projectLabel,
+						label: wsInfo.label,
+						color: wsInfo.color,
+						agentIds: affectedIds,
+					});
+				}
+			}
+			break;
+		}
 	}
 }
 
@@ -200,6 +261,7 @@ function handleClientMessage(ws: WebSocket, msg: unknown, assetsRoot: string): v
 
 function createAgent(jsonlFile: string, projectDir: string, projectLabel: string): void {
 	const id = nextAgentId++;
+	const wsInfo = workspaceInfoCache.get(projectLabel);
 	const agent: AgentState = {
 		id,
 		projectDir,
@@ -218,6 +280,7 @@ function createAgent(jsonlFile: string, projectDir: string, projectLabel: string
 		lastActivityTime: Date.now(),
 		transcriptBuffer: [],
 		transcriptSeq: 0,
+		workspaceColor: wsInfo?.color ?? WORKSPACE_COLORS[0],
 	};
 
 	// Skip to end of file (don't replay history)
@@ -229,8 +292,14 @@ function createAgent(jsonlFile: string, projectDir: string, projectLabel: string
 	agents.set(id, agent);
 	trackedFiles.add(jsonlFile);
 
+	const multi = isMultiWorkspace();
 	console.log(`[Server] Agent ${id} created: ${projectLabel} (${jsonlFile})`);
-	broadcast({ type: 'agentCreated', id });
+	broadcast({
+		type: 'agentCreated',
+		id,
+		workspaceLabel: wsInfo?.label,
+		workspaceColor: multi ? agent.workspaceColor : undefined,
+	});
 
 	startFileWatching(id, jsonlFile, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, broadcast);
 }
@@ -251,6 +320,12 @@ function discoverAndSyncAgents(): void {
 	const sessions = scanAllProjects();
 	const activeFiles = new Set(sessions.map(s => s.jsonlFile));
 
+	// Pre-build workspace cache from incoming sessions so createAgent can use it
+	const incomingLabels = sessions.map(s => s.projectLabel);
+	const existingLabels = [...agents.values()].map(a => a.projectLabel);
+	const config = readWorkspaceConfig();
+	workspaceInfoCache = resolveWorkspaces([...incomingLabels, ...existingLabels], config);
+
 	// New sessions → create agents
 	for (const session of sessions) {
 		if (!trackedFiles.has(session.jsonlFile)) {
@@ -265,6 +340,9 @@ function discoverAndSyncAgents(): void {
 			removeAgent(id);
 		}
 	}
+
+	// Refresh cache after any removals
+	refreshWorkspaceCache();
 }
 
 // ── Layout watching ──────────────────────────────────────────

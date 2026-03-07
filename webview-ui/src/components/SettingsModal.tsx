@@ -1,6 +1,8 @@
 import { useState, useRef } from 'react'
 import { vscode } from '../wsApi.js'
 import { isSoundEnabled, setSoundEnabled } from '../notificationSound.js'
+import type { WorkspaceInfo } from '../hooks/useExtensionMessages.js'
+import { WorkspaceManager } from './WorkspaceManager.js'
 
 interface SettingsModalProps {
   isOpen: boolean
@@ -9,6 +11,7 @@ interface SettingsModalProps {
   onToggleDebugMode: () => void
   petEnabled: boolean
   onTogglePet: () => void
+  workspaces: WorkspaceInfo[]
 }
 
 const menuItemBase: React.CSSProperties = {
@@ -26,7 +29,7 @@ const menuItemBase: React.CSSProperties = {
   textAlign: 'left',
 }
 
-export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode, petEnabled, onTogglePet }: SettingsModalProps) {
+export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode, petEnabled, onTogglePet, workspaces }: SettingsModalProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [soundLocal, setSoundLocal] = useState(isSoundEnabled)
   const importInputRef = useRef<HTMLInputElement>(null)
@@ -227,6 +230,14 @@ export function SettingsModal({ isOpen, onClose, isDebugMode, onToggleDebugMode,
             {petEnabled ? 'X' : ''}
           </span>
         </button>
+        {workspaces.length > 1 && (
+          <>
+            <div style={{ borderTop: '1px solid var(--pixel-border)', margin: '4px 0' }} />
+            <div style={{ padding: '4px 10px', fontSize: '20px', color: 'var(--pixel-text-dim)' }}>Workspaces</div>
+            <WorkspaceManager workspaces={workspaces} />
+          </>
+        )}
+        <div style={{ borderTop: '1px solid var(--pixel-border)', margin: '4px 0' }} />
         <button
           onClick={onToggleDebugMode}
           onMouseEnter={() => setHovered('debug')}

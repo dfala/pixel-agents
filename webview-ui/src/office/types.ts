@@ -206,6 +206,8 @@ export interface Character {
   matrixEffectSeeds: number[]
   /** Workspace folder name (only set for multi-root workspaces) */
   folderName?: string
+  /** Hex workspace color for canvas badge (only set in multi-workspace mode) */
+  workspaceColor?: string
   /** When set, the character is visiting something specific during idle */
   idleVisitType: 'break' | 'pet' | null
   /** Timer for special idle visit pauses (break furniture dwell, pet interaction) */
