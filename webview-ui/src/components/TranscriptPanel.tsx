@@ -32,7 +32,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
         borderTop: '1px solid var(--pixel-border)',
         margin: '6px 0',
         padding: '4px 0 0',
-        fontSize: '16px',
+        fontSize: '24px',
         color: 'var(--pixel-text-dim)',
         opacity: 0.6,
       }}>
@@ -49,7 +49,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
         style={{ margin: '4px 0', position: 'relative' }}
       >
         <div style={{
-          fontSize: '20px',
+          fontSize: '24px',
           color: 'var(--pixel-text)',
           lineHeight: 1.3,
           wordBreak: 'break-word',
@@ -84,7 +84,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
           background: 'rgba(90, 140, 255, 0.2)',
           border: '1px solid var(--pixel-accent)',
           padding: '1px 5px',
-          fontSize: '16px',
+          fontSize: '14px',
           color: 'var(--pixel-accent)',
           marginRight: 5,
           fontFamily: 'monospace',
@@ -92,7 +92,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
           {entry.toolName}
         </span>
         <span style={{
-          fontSize: '18px',
+          fontSize: '14px',
           color: 'var(--pixel-text-dim)',
           fontFamily: 'monospace',
           wordBreak: 'break-word',
@@ -122,7 +122,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
         }}
       >
         <div style={{
-          fontSize: '16px',
+          fontSize: '14px',
           color: entry.isError ? '#e55' : 'var(--pixel-text-dim)',
           fontFamily: 'monospace',
           whiteSpace: 'pre-wrap',
@@ -130,6 +130,8 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
           opacity: 0.8,
           maxHeight: 120,
           overflow: 'hidden',
+          maskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 70%, transparent 100%)',
         }}>
           {entry.output || (entry.isError ? 'Error (no output)' : '(empty result)')}
         </div>
@@ -240,7 +242,7 @@ export function TranscriptPanel({
         )}
         <span style={{
           flex: 1,
-          fontSize: '22px',
+          fontSize: '24px',
           color: 'var(--pixel-text)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -254,7 +256,7 @@ export function TranscriptPanel({
             background: 'none',
             border: 'none',
             color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '22px',
+            fontSize: '24px',
             cursor: 'pointer',
             padding: '0 4px',
             borderRadius: 0,
@@ -280,7 +282,7 @@ export function TranscriptPanel({
         {entries.length === 0 ? (
           <div style={{
             color: 'var(--pixel-text-dim)',
-            fontSize: '20px',
+            fontSize: '24px',
             textAlign: 'center',
             padding: '20px 0',
           }}>
@@ -307,7 +309,7 @@ export function TranscriptPanel({
             border: '2px solid var(--pixel-border)',
             borderRadius: 0,
             padding: '3px 10px',
-            fontSize: '18px',
+            fontSize: '24px',
             cursor: 'pointer',
             boxShadow: 'var(--pixel-shadow)',
             zIndex: 1,

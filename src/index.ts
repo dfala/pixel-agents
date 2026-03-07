@@ -12,8 +12,13 @@ const app = express();
 const httpServer = createServer(app);
 const wss = new WebSocketServer({ server: httpServer });
 
-// Determine dist root (import.meta.dirname = dist/server/, so parent = dist/)
-const distDir = path.resolve(import.meta.dirname, '..');
+// Determine dist root
+// When running compiled (dist/server/index.js): import.meta.dirname = dist/server/, parent = dist/
+// When running via tsx (src/index.ts): import.meta.dirname = src/, so use sibling dist/
+const isDev = import.meta.dirname.endsWith(path.sep + 'src');
+const distDir = isDev
+  ? path.resolve(import.meta.dirname, '..', 'dist')
+  : path.resolve(import.meta.dirname, '..');
 const assetsRoot = distDir; // dist/ contains assets/ subfolder (copied by build:assets)
 
 // Serve static webview files

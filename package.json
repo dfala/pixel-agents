@@ -19,7 +19,7 @@
     "build:assets": "node scripts/copy-assets.cjs",
     "build": "npm run build:server && npm run build:webview && npm run build:assets",
     "dev:server": "tsx --watch src/index.ts",
-    "dev:webview": "cd webview-ui && npm run dev",
+    "dev:webview": "cd webview-ui && npm run build -- --watch",
     "dev": "npm-run-all -p dev:server dev:webview",
     "start": "node dist/server/index.js",
     "check-types": "tsc --noEmit",
