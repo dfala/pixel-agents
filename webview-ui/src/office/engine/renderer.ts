@@ -1,7 +1,7 @@
 import { TileType, TILE_SIZE, CharacterState } from '../types.js'
 import type { TileType as TileTypeVal, FurnitureInstance, Character, SpriteData, Seat, FloorColor } from '../types.js'
 import { getCachedSprite, getOutlineSprite } from '../sprites/spriteCache.js'
-import { getCharacterSprites, BUBBLE_PERMISSION_SPRITE, BUBBLE_WAITING_SPRITE } from '../sprites/spriteData.js'
+import { getCharacterSprites, BUBBLE_PERMISSION_SPRITE, BUBBLE_WAITING_SPRITE, EXPRESSION_SPRITES } from '../sprites/spriteData.js'
 import { getCharacterSprite } from './characters.js'
 import { renderMatrixEffect } from './matrixEffect.js'
 import { getPetSprite, PetState } from './pet.js'
@@ -26,6 +26,9 @@ import {
   BUBBLE_FADE_DURATION_SEC,
   BUBBLE_SITTING_OFFSET_PX,
   BUBBLE_VERTICAL_OFFSET_PX,
+  EXPRESSION_FADE_DURATION_SEC,
+  EXPRESSION_VERTICAL_OFFSET_PX,
+  EXPRESSION_STATUS_BUBBLE_GAP_PX,
   FALLBACK_FLOOR_COLOR,
   SEAT_OWN_COLOR,
   SEAT_AVAILABLE_COLOR,
@@ -519,6 +522,44 @@ export function renderBubbles(
   }
 }
 
+/** Render expression bubbles (contextual emoji icons) below status bubbles */
+function renderExpressions(
+  ctx: CanvasRenderingContext2D,
+  characters: Character[],
+  offsetX: number,
+  offsetY: number,
+  zoom: number,
+): void {
+  for (const ch of characters) {
+    if (!ch.expressionType) continue
+    if (ch.matrixEffect === 'despawn') continue
+
+    const sprite = EXPRESSION_SPRITES[ch.expressionType]
+    if (!sprite) continue
+
+    const cached = getCachedSprite(sprite, zoom)
+    const sittingOff = ch.state === CharacterState.TYPE ? BUBBLE_SITTING_OFFSET_PX : 0
+    const bubbleX = Math.round(offsetX + ch.x * zoom - cached.width / 2)
+    let bubbleY = Math.round(offsetY + (ch.y + sittingOff - EXPRESSION_VERTICAL_OFFSET_PX) * zoom - cached.height - 1 * zoom)
+
+    // Shift down when a status bubble is also showing
+    if (ch.bubbleType) {
+      bubbleY += Math.round(EXPRESSION_STATUS_BUBBLE_GAP_PX * zoom)
+    }
+
+    // Fade out timed expressions in last 0.5s
+    let alpha = 1.0
+    if (ch.expressionTimer > 0 && ch.expressionTimer < EXPRESSION_FADE_DURATION_SEC) {
+      alpha = ch.expressionTimer / EXPRESSION_FADE_DURATION_SEC
+    }
+
+    ctx.save()
+    if (alpha < 1.0) ctx.globalAlpha = alpha
+    ctx.drawImage(cached, bubbleX, bubbleY)
+    ctx.restore()
+  }
+}
+
 export interface ButtonBounds {
   /** Center X in device pixels */
   cx: number
@@ -616,6 +657,7 @@ export function renderFrame(
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom)
+  renderExpressions(ctx, characters, offsetX, offsetY, zoom)
 
   // Editor overlays
   if (editor) {

@@ -212,4 +212,8 @@ export interface Character {
   idleVisitTimer: number
   /** Whether the character has poked the pet during this visit */
   idleVisitPokedPet: boolean
+  /** Current expression bubble type, or null */
+  expressionType: 'reading' | 'writing' | 'running' | 'tasking' | 'error' | 'success' | 'thinking' | null
+  /** Countdown timer for timed expressions (3s types count down to 0, persistent types = 0) */
+  expressionTimer: number
 }

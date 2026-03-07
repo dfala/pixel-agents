@@ -76,6 +76,7 @@ export function useExtensionMessages(
   const [agentStatuses, setAgentStatuses] = useState<Record<number, string>>({})
   const [subagentTools, setSubagentTools] = useState<Record<number, Record<string, ToolActivity[]>>>({})
   const [subagentCharacters, setSubagentCharacters] = useState<SubagentCharacter[]>([])
+  const hadToolsRef = useRef<Set<number>>(new Set())
   const [layoutReady, setLayoutReady] = useState(false)
   const [loadedAssets, setLoadedAssets] = useState<{ catalog: FurnitureAsset[]; sprites: Record<string, string[][]> } | undefined>()
   const [workspaceFolders, setWorkspaceFolders] = useState<WorkspaceFolder[]>([])
@@ -189,6 +190,8 @@ export function useExtensionMessages(
         os.setAgentTool(id, toolName)
         os.setAgentActive(id, true)
         os.clearPermissionBubble(id)
+        if (toolName) os.setCharacterExpression(id, toolName)
+        hadToolsRef.current.add(id)
         // Create sub-agent character for Task tool subtasks
         if (status.startsWith('Subtask:')) {
           const label = status.slice('Subtask:'.length).trim()
@@ -209,6 +212,11 @@ export function useExtensionMessages(
             [id]: list.map((t) => (t.toolId === toolId ? { ...t, done: true } : t)),
           }
         })
+        if (msg.isError) {
+          os.showErrorExpression(id)
+        } else {
+          os.clearCharacterExpression(id)
+        }
       } else if (msg.type === 'agentToolsClear') {
         const id = msg.id as number
         setAgentTools((prev) => {
@@ -228,6 +236,8 @@ export function useExtensionMessages(
         setSubagentCharacters((prev) => prev.filter((s) => s.parentAgentId !== id))
         os.setAgentTool(id, null)
         os.clearPermissionBubble(id)
+        os.clearCharacterExpression(id)
+        hadToolsRef.current.delete(id)
       } else if (msg.type === 'agentSelected') {
         const id = msg.id as number
         setSelectedAgent(id)
@@ -247,6 +257,12 @@ export function useExtensionMessages(
         if (status === 'waiting') {
           os.showWaitingBubble(id)
           playDoneSound()
+          if (hadToolsRef.current.has(id)) {
+            os.showSuccessExpression(id)
+          } else {
+            os.clearCharacterExpression(id)
+          }
+          hadToolsRef.current.delete(id)
         }
       } else if (msg.type === 'agentToolPermission') {
         const id = msg.id as number
@@ -303,6 +319,7 @@ export function useExtensionMessages(
           const subToolName = extractToolName(status)
           os.setAgentTool(subId, subToolName)
           os.setAgentActive(subId, true)
+          if (subToolName) os.setCharacterExpression(subId, subToolName)
         }
       } else if (msg.type === 'subagentToolDone') {
         const id = msg.id as number
@@ -385,6 +402,10 @@ export function useExtensionMessages(
           }
           return { ...prev, [agentId]: updated }
         })
+        // Thinking expression: assistant text with no active tools
+        if (entry.type === 'assistant_text') {
+          os.showThinkingExpression(agentId)
+        }
       }
     }
     addMessageListener(handler)

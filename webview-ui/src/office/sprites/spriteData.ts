@@ -318,6 +318,160 @@ export const BUBBLE_WAITING_SPRITE: SpriteData = (() => {
   ]
 })()
 
+// ── Expression Sprites ──────────────────────────────────────────
+// 11x13 speech-bubble icons matching existing bubble frame style
+
+/** Lightbulb — reading tool (Read, Grep, Glob, WebFetch, WebSearch) */
+export const EXPRESSION_READING_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', Y = '#DDCC44', D = '#AA9922'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, F, Y, F, F, F, F, B],
+    [B, F, F, F, Y, Y, Y, F, F, F, B],
+    [B, F, F, Y, Y, F, Y, Y, F, F, B],
+    [B, F, F, Y, F, F, F, Y, F, F, B],
+    [B, F, F, F, Y, F, Y, F, F, F, B],
+    [B, F, F, F, Y, Y, Y, F, F, F, B],
+    [B, F, F, F, F, D, F, F, F, F, B],
+    [B, F, F, F, D, D, D, F, F, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Pencil — writing tool (Write, Edit) */
+export const EXPRESSION_WRITING_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', L = '#5599DD', D = '#3366AA', T = '#DDCC88'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, F, F, F, F, L, F, B],
+    [B, F, F, F, F, F, F, L, L, F, B],
+    [B, F, F, F, F, F, L, L, F, F, B],
+    [B, F, F, F, F, L, L, F, F, F, B],
+    [B, F, F, F, D, L, F, F, F, F, B],
+    [B, F, F, D, D, F, F, F, F, F, B],
+    [B, F, D, D, F, F, F, F, F, F, B],
+    [B, T, D, F, F, F, F, F, F, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Gear — running tool (Bash) */
+export const EXPRESSION_RUNNING_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', G = '#999999', D = '#666666'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, G, G, G, F, F, F, B],
+    [B, F, F, G, D, D, D, G, F, F, B],
+    [B, F, G, D, G, G, G, D, G, F, B],
+    [B, G, D, G, G, F, G, G, D, G, B],
+    [B, G, D, G, F, F, F, G, D, G, B],
+    [B, G, D, G, G, F, G, G, D, G, B],
+    [B, F, G, D, G, G, G, D, G, F, B],
+    [B, F, F, G, D, D, D, G, F, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Arrow/fork — tasking (Task tool / sub-agent spawned) */
+export const EXPRESSION_TASKING_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', T = '#4ec9b0'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, F, T, F, F, F, F, B],
+    [B, F, F, F, T, T, T, F, F, F, B],
+    [B, F, F, F, F, T, F, F, F, F, B],
+    [B, F, F, F, F, T, F, F, F, F, B],
+    [B, F, F, F, T, F, T, F, F, F, B],
+    [B, F, F, T, F, F, F, T, F, F, B],
+    [B, F, T, F, F, F, F, F, T, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Angry face — error (tool_result with isError) */
+export const EXPRESSION_ERROR_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', R = '#DD4444', D = '#AA2222'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, R, F, F, F, R, F, F, B],
+    [B, F, R, F, R, F, R, F, R, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, D, D, D, F, F, F, B],
+    [B, F, F, D, F, F, F, D, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Sparkles — success (turn completed with tools) */
+export const EXPRESSION_SUCCESS_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', G = '#44DD88', L = '#88FFBB'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, F, L, F, F, F, F, B],
+    [B, F, L, F, F, G, F, F, L, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, L, F, F, G, F, F, F, F, B],
+    [B, F, F, F, F, L, F, F, L, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Ellipsis — thinking (assistant text, no tools active) */
+export const EXPRESSION_THINKING_SPRITE: SpriteData = (() => {
+  const B = '#555566', F = '#EEEEFF', W = '#CCCCDD'
+  return [
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, W, F, W, F, W, F, F, B],
+    [B, F, F, W, F, W, F, W, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, F, F, F, F, F, F, F, F, F, B],
+    [B, B, B, B, B, B, B, B, B, B, B],
+    [_, _, _, _, B, B, B, _, _, _, _],
+    [_, _, _, _, _, B, _, _, _, _, _],
+    [_, _, _, _, _, _, _, _, _, _, _],
+  ]
+})()
+
+/** Lookup map for expression type → sprite */
+export const EXPRESSION_SPRITES: Record<string, SpriteData> = {
+  reading: EXPRESSION_READING_SPRITE,
+  writing: EXPRESSION_WRITING_SPRITE,
+  running: EXPRESSION_RUNNING_SPRITE,
+  tasking: EXPRESSION_TASKING_SPRITE,
+  error: EXPRESSION_ERROR_SPRITE,
+  success: EXPRESSION_SUCCESS_SPRITE,
+  thinking: EXPRESSION_THINKING_SPRITE,
+}
+
 // ── Character Sprites ───────────────────────────────────────────
 // 16x24 characters with palette substitution
 

@@ -185,11 +185,13 @@ export function processTranscriptLine(
 							agent.activeToolStatuses.delete(completedToolId);
 							agent.activeToolNames.delete(completedToolId);
 							const toolId = completedToolId;
+							const isError = !!block.is_error;
 							setTimeout(() => {
 								send({
 									type: 'agentToolDone',
 									id: agentId,
 									toolId,
+									isError,
 								});
 							}, TOOL_DONE_DELAY_MS);
 						}

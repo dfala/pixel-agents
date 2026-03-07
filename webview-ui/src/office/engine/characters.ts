@@ -22,6 +22,7 @@ import {
   PET_VISIT_PRE_POKE_PAUSE_SEC,
   PET_VISIT_POST_POKE_PAUSE_SEC,
   BREAK_FURNITURE_TYPES,
+  EXPRESSION_TIMED_DURATION_SEC,
 } from '../../constants.js'
 
 /** Tools that show reading animation instead of typing */
@@ -91,7 +92,36 @@ export function createCharacter(
     idleVisitType: null,
     idleVisitTimer: 0,
     idleVisitPokedPet: false,
+    expressionType: null,
+    expressionTimer: 0,
   }
+}
+
+// ── Expression helpers ──────────────────────────────────────────
+
+const EXPRESSION_PRIORITY: Record<string, number> = {
+  error: 7, success: 6, writing: 5, running: 4, reading: 3, tasking: 2, thinking: 1,
+}
+
+/** Set an expression on a character, respecting priority */
+export function setExpression(
+  ch: Character,
+  type: Character['expressionType'],
+  timed: boolean,
+): void {
+  if (ch.expressionType && type) {
+    const currentPri = EXPRESSION_PRIORITY[ch.expressionType] ?? 0
+    const newPri = EXPRESSION_PRIORITY[type] ?? 0
+    if (newPri < currentPri && ch.expressionTimer > 0) return
+  }
+  ch.expressionType = type
+  ch.expressionTimer = timed ? EXPRESSION_TIMED_DURATION_SEC : 0
+}
+
+/** Clear any active expression */
+export function clearExpression(ch: Character): void {
+  ch.expressionType = null
+  ch.expressionTimer = 0
 }
 
 /** Find an adjacent walkable tile next to a furniture footprint */
@@ -208,6 +238,15 @@ export function updateCharacter(
   pet: Pet | null,
 ): void {
   ch.frameTimer += dt
+
+  // Expression timer countdown
+  if (ch.expressionTimer > 0) {
+    ch.expressionTimer -= dt
+    if (ch.expressionTimer <= 0) {
+      ch.expressionType = null
+      ch.expressionTimer = 0
+    }
+  }
 
   switch (ch.state) {
     case CharacterState.TYPE: {

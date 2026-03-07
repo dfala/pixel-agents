@@ -16,7 +16,7 @@ import {
   PET_HIT_HEIGHT,
 } from '../../constants.js'
 import type { Character, Seat, FurnitureInstance, TileType as TileTypeVal, OfficeLayout, PlacedFurniture } from '../types.js'
-import { createCharacter, updateCharacter } from './characters.js'
+import { createCharacter, updateCharacter, setExpression, clearExpression } from './characters.js'
 import { matrixEffectSeeds } from './matrixEffect.js'
 import { createPet, updatePet } from './pet.js'
 import type { Pet } from './pet.js'
@@ -29,6 +29,14 @@ import {
   getBlockedTiles,
 } from '../layout/layoutSerializer.js'
 import { getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js'
+
+const TOOL_TO_EXPRESSION: Record<string, Character['expressionType']> = {
+  Read: 'reading', Grep: 'reading', Glob: 'reading', WebFetch: 'reading', WebSearch: 'reading',
+  Write: 'writing', Edit: 'writing',
+  Bash: 'running',
+  Task: 'tasking',
+}
+const TIMED_EXPRESSIONS = new Set(['tasking', 'error', 'success'])
 
 export class OfficeState {
   layout: OfficeLayout
@@ -640,6 +648,38 @@ export class OfficeState {
     } else if (ch.bubbleType === 'waiting') {
       // Trigger immediate fade (0.3s remaining)
       ch.bubbleTimer = Math.min(ch.bubbleTimer, DISMISS_BUBBLE_FAST_FADE_SEC)
+    }
+  }
+
+  // ── Character Expressions ──────────────────────────────────────
+
+  setCharacterExpression(id: number, toolName: string): void {
+    const ch = this.characters.get(id)
+    if (!ch) return
+    const type = TOOL_TO_EXPRESSION[toolName]
+    if (!type) return
+    setExpression(ch, type, TIMED_EXPRESSIONS.has(type))
+  }
+
+  clearCharacterExpression(id: number): void {
+    const ch = this.characters.get(id)
+    if (ch) clearExpression(ch)
+  }
+
+  showErrorExpression(id: number): void {
+    const ch = this.characters.get(id)
+    if (ch) setExpression(ch, 'error', true)
+  }
+
+  showSuccessExpression(id: number): void {
+    const ch = this.characters.get(id)
+    if (ch) setExpression(ch, 'success', true)
+  }
+
+  showThinkingExpression(id: number): void {
+    const ch = this.characters.get(id)
+    if (ch && !ch.currentTool && ch.isActive) {
+      setExpression(ch, 'thinking', false)
     }
   }
 

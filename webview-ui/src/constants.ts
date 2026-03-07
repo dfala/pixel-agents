@@ -157,3 +157,9 @@ export const BREAK_FURNITURE_TYPES = new Set([
   'COFFEE_TABLE_LG',
   'COFFEE_MUG',
 ])
+
+// ── Expressions ────────────────────────────────────────────
+export const EXPRESSION_TIMED_DURATION_SEC = 3
+export const EXPRESSION_FADE_DURATION_SEC = 0.5
+export const EXPRESSION_VERTICAL_OFFSET_PX = 28
+export const EXPRESSION_STATUS_BUBBLE_GAP_PX = -14
