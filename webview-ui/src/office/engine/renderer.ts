@@ -51,6 +51,44 @@ import {
   WORKSPACE_BADGE_OFFSET_Y,
 } from '../../constants.js'
 
+// ── Jukebox equalizer animation ─────────────────────────────────
+
+/** Equalizer bar colors (neon palette matching the ON sprite) */
+const EQ_COLORS = ['#40ff80', '#40e0ff', '#ff4080', '#ffe040', '#40ff80', '#c040ff']
+/** Display area within the 16×32 jukebox sprite: x=4..11, y=11..14 (4px tall, 8px wide) */
+const EQ_DISPLAY_X = 4
+const EQ_DISPLAY_Y = 11
+const EQ_DISPLAY_W = 8
+const EQ_DISPLAY_H = 4
+/** Animation speed multiplier */
+const EQ_SPEED = 3
+
+function drawJukeboxEqualizer(
+  ctx: CanvasRenderingContext2D,
+  fx: number,
+  fy: number,
+  zoom: number,
+): void {
+  const now = Date.now() / 1000
+  // Clear the display area first (dark background)
+  const dx = fx + EQ_DISPLAY_X * zoom
+  const dy = fy + EQ_DISPLAY_Y * zoom
+  ctx.fillStyle = '#102040'
+  ctx.fillRect(dx, dy, EQ_DISPLAY_W * zoom, EQ_DISPLAY_H * zoom)
+
+  // Draw 6 bars, each 1px wide with varying heights
+  for (let i = 0; i < 6; i++) {
+    // Each bar oscillates at a different phase and frequency
+    const phase = i * 1.3 + 0.7
+    const freq = 1.0 + i * 0.4
+    const height = 1 + Math.floor((Math.sin(now * EQ_SPEED * freq + phase) * 0.5 + 0.5) * EQ_DISPLAY_H)
+    const barX = dx + (i + 1) * zoom
+    const barH = Math.min(height, EQ_DISPLAY_H)
+    ctx.fillStyle = EQ_COLORS[i]
+    ctx.fillRect(barX, dy + (EQ_DISPLAY_H - barH) * zoom, zoom, barH * zoom)
+  }
+}
+
 // ── Render functions ────────────────────────────────────────────
 
 export function renderTileGrid(
@@ -124,10 +162,12 @@ export function renderScene(
     const cached = getCachedSprite(f.sprite, zoom)
     const fx = offsetX + f.x * zoom
     const fy = offsetY + f.y * zoom
+    const isJukeboxOn = !!f.type?.includes('JUKEBOX') && f.type.includes('ON')
     drawables.push({
       zY: f.zY,
       draw: (c) => {
         c.drawImage(cached, fx, fy)
+        if (isJukeboxOn) drawJukeboxEqualizer(c, fx, fy, zoom)
       },
     })
 

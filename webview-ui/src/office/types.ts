@@ -75,6 +75,8 @@ export interface FurnitureInstance {
   zY: number
   /** Optional uid linking back to PlacedFurniture (absent for wall instances) */
   uid?: string
+  /** Furniture type identifier (e.g. 'JUKEBOX_FRONT_ON') for runtime effects */
+  type?: string
 }
 
 export interface ToolActivity {
