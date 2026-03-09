@@ -424,6 +424,8 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           cursor = 'pointer'
         } else if (officeState.getPetAt(pos.worldX, pos.worldY)) {
           cursor = 'pointer'
+        } else if (tile && officeState.getJukeboxAtTile(tile.col, tile.row)) {
+          cursor = 'pointer'
         } else if (officeState.selectedAgentId !== null && tile) {
           // Check if hovering over a clickable seat (available or own)
           const seatId = officeState.getSeatAtTile(tile.col, tile.row)
@@ -623,6 +625,23 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           pokePet(officeState.pet, officeState.walkableTiles, officeState.tileMap, officeState.blockedTiles)
         }
         return
+      }
+
+      // Jukebox hit — toggle jukebox popup
+      {
+        const tile = screenToTile(e.clientX, e.clientY)
+        if (tile) {
+          const jukeboxUid = officeState.getJukeboxAtTile(tile.col, tile.row)
+          if (jukeboxUid) {
+            officeState.activeJukeboxUid = officeState.activeJukeboxUid === jukeboxUid ? null : jukeboxUid
+            return
+          }
+        }
+      }
+
+      // Close jukebox popup on empty space click
+      if (officeState.activeJukeboxUid) {
+        officeState.activeJukeboxUid = null
       }
 
       // No agent hit — check seat click while agent is selected

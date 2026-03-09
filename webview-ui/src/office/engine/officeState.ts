@@ -29,6 +29,7 @@ import {
   getBlockedTiles,
 } from '../layout/layoutSerializer.js'
 import { getCatalogEntry, getOnStateType } from '../layout/furnitureCatalog.js'
+import { isMusicEnabled } from '../../backgroundMusic.js'
 
 const TOOL_TO_EXPRESSION: Record<string, Character['expressionType']> = {
   Read: 'reading', Grep: 'reading', Glob: 'reading', WebFetch: 'reading', WebSearch: 'reading',
@@ -57,6 +58,10 @@ export class OfficeState {
   private nextSubagentId = -1
   /** Office pet companion (cat) */
   pet: Pet | null = null
+  /** Jukebox interaction state: uid of clicked jukebox (shows popup), null when closed */
+  activeJukeboxUid: string | null = null
+  /** Track last music state to rebuild furniture when it changes */
+  private lastMusicPlaying = false
 
   constructor(layout?: OfficeLayout) {
     this.layout = layout || createDefaultLayout()
@@ -583,13 +588,21 @@ export class OfficeState {
       }
     }
 
-    if (autoOnTiles.size === 0) {
+    const musicPlaying = isMusicEnabled()
+
+    if (autoOnTiles.size === 0 && !musicPlaying) {
       this.furniture = layoutToFurnitureInstances(this.layout.furniture)
       return
     }
 
     // Build modified furniture list with auto-state applied
     const modifiedFurniture: PlacedFurniture[] = this.layout.furniture.map((item) => {
+      // Jukebox auto-state: switch to ON when music is playing
+      if (musicPlaying && item.type.includes('JUKEBOX')) {
+        const onType = getOnStateType(item.type)
+        if (onType !== item.type) return { ...item, type: onType }
+        return item
+      }
       const entry = getCatalogEntry(item.type)
       if (!entry) return item
       // Check if any tile of this furniture overlaps an auto-on tile
@@ -712,6 +725,24 @@ export class OfficeState {
     return this.pet !== null && this.pet.enabled
   }
 
+  /** Get the jukebox furniture at a tile position. Returns uid or null. */
+  getJukeboxAtTile(col: number, row: number): string | null {
+    for (const f of this.layout.furniture) {
+      if (!f.type.includes('JUKEBOX')) continue
+      const entry = getCatalogEntry(f.type)
+      if (!entry) continue
+      if (col >= f.col && col < f.col + entry.footprintW && row >= f.row && row < f.row + entry.footprintH) {
+        return f.uid
+      }
+    }
+    return null
+  }
+
+  /** Get the jukebox PlacedFurniture by uid */
+  getJukeboxByUid(uid: string): PlacedFurniture | undefined {
+    return this.layout.furniture.find((f) => f.uid === uid && f.type.includes('JUKEBOX'))
+  }
+
   update(dt: number): void {
     const toDelete: number[] = []
     for (const ch of this.characters.values()) {
@@ -755,6 +786,13 @@ export class OfficeState {
     // Update pet companion
     if (this.pet && this.pet.enabled) {
       updatePet(this.pet, dt, this.walkableTiles, this.tileMap, this.blockedTiles, this.characters)
+    }
+
+    // Rebuild furniture when music state changes (jukebox ON/OFF sprite)
+    const musicNow = isMusicEnabled()
+    if (musicNow !== this.lastMusicPlaying) {
+      this.lastMusicPlaying = musicNow
+      this.rebuildFurnitureInstances()
     }
   }
 

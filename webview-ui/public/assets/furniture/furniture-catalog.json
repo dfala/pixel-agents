@@ -1,7 +1,7 @@
 {
   "version": 1,
   "timestamp": "2026-03-06T16:02:05.029Z",
-  "totalAssets": 32,
+  "totalAssets": 34,
   "categories": [
     "desks",
     "chairs",
@@ -262,6 +262,38 @@
       "isDesk": false,
       "canPlaceOnSurfaces": true,
       "backgroundTiles": 1
+    },
+    {
+      "id": "ASSET_JUKEBOX_OFF",
+      "name": "JUKEBOX_FRONT_OFF",
+      "label": "Jukebox",
+      "category": "electronics",
+      "file": "furniture/electronics/JUKEBOX_FRONT_OFF.png",
+      "width": 16,
+      "height": 32,
+      "footprintW": 1,
+      "footprintH": 2,
+      "isDesk": false,
+      "backgroundTiles": 1,
+      "groupId": "JUKEBOX",
+      "orientation": "front",
+      "state": "off"
+    },
+    {
+      "id": "ASSET_JUKEBOX_ON",
+      "name": "JUKEBOX_FRONT_ON",
+      "label": "Jukebox (Playing)",
+      "category": "electronics",
+      "file": "furniture/electronics/JUKEBOX_FRONT_ON.png",
+      "width": 16,
+      "height": 32,
+      "footprintW": 1,
+      "footprintH": 2,
+      "isDesk": false,
+      "backgroundTiles": 1,
+      "groupId": "JUKEBOX",
+      "orientation": "front",
+      "state": "on"
     },
     {
       "id": "ASSET_72",

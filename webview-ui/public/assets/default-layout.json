@@ -2797,6 +2797,12 @@
       "type": "ASSET_123",
       "col": 2,
       "row": 19
+    },
+    {
+      "uid": "f-jukebox-default-1",
+      "type": "ASSET_JUKEBOX_OFF",
+      "col": 14,
+      "row": 10
     }
   ]
 }
