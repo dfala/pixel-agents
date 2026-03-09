@@ -72,6 +72,8 @@ export interface FurnitureInstance {
   y: number
   /** Y value used for depth sorting (typically bottom edge) */
   zY: number
+  /** Optional uid linking back to PlacedFurniture (absent for wall instances) */
+  uid?: string
 }
 
 export interface ToolActivity {

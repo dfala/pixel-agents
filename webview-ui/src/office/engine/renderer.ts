@@ -115,6 +115,7 @@ export function renderScene(
   selectedAgentId: number | null,
   hoveredAgentId: number | null,
   pet?: Pet | null,
+  hoveredFurnitureUid?: string | null,
 ): void {
   const drawables: ZDrawable[] = []
 
@@ -129,6 +130,23 @@ export function renderScene(
         c.drawImage(cached, fx, fy)
       },
     })
+
+    // Hover outline for interactive furniture (e.g. jukebox)
+    if (hoveredFurnitureUid && f.uid === hoveredFurnitureUid) {
+      const outlineData = getOutlineSprite(f.sprite)
+      const outlineCached = getCachedSprite(outlineData, zoom)
+      const olFx = fx - zoom  // 1 sprite-pixel offset, scaled
+      const olFy = fy - zoom
+      drawables.push({
+        zY: f.zY - OUTLINE_Z_SORT_OFFSET,
+        draw: (c) => {
+          c.save()
+          c.globalAlpha = HOVERED_OUTLINE_ALPHA
+          c.drawImage(outlineCached, olFx, olFy)
+          c.restore()
+        },
+      })
+    }
   }
 
   // Characters
@@ -616,6 +634,7 @@ export interface EditorRenderState {
 export interface SelectionRenderState {
   selectedAgentId: number | null
   hoveredAgentId: number | null
+  hoveredFurnitureUid: string | null
   hoveredTile: { col: number; row: number } | null
   seats: Map<string, Seat>
   characters: Map<number, Character>
@@ -670,7 +689,8 @@ export function renderFrame(
   // Draw walls + furniture + characters + pet (z-sorted)
   const selectedId = selection?.selectedAgentId ?? null
   const hoveredId = selection?.hoveredAgentId ?? null
-  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId, pet)
+  const hoveredFurnUid = selection?.hoveredFurnitureUid ?? null
+  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId, pet, hoveredFurnUid)
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom)

@@ -205,6 +205,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
         const selectionRender: SelectionRenderState = {
           selectedAgentId: officeState.selectedAgentId,
           hoveredAgentId: officeState.hoveredAgentId,
+          hoveredFurnitureUid: officeState.hoveredFurnitureUid,
           hoveredTile: officeState.hoveredTile,
           seats: officeState.seats,
           characters: officeState.characters,
@@ -417,6 +418,9 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
       const hitId = officeState.getCharacterAt(pos.worldX, pos.worldY)
       const tile = screenToTile(e.clientX, e.clientY)
       officeState.hoveredTile = tile
+      // Track hovered interactive furniture (e.g. jukebox)
+      const hoveredJukeboxUid = tile ? officeState.getJukeboxAtTile(tile.col, tile.row) : null
+      officeState.hoveredFurnitureUid = hoveredJukeboxUid
       const canvas = canvasRef.current
       if (canvas) {
         let cursor = 'default'
@@ -424,7 +428,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           cursor = 'pointer'
         } else if (officeState.getPetAt(pos.worldX, pos.worldY)) {
           cursor = 'pointer'
-        } else if (tile && officeState.getJukeboxAtTile(tile.col, tile.row)) {
+        } else if (hoveredJukeboxUid) {
           cursor = 'pointer'
         } else if (officeState.selectedAgentId !== null && tile) {
           // Check if hovering over a clickable seat (available or own)
@@ -700,6 +704,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
     editorState.ghostCol = -1
     editorState.ghostRow = -1
     officeState.hoveredAgentId = null
+    officeState.hoveredFurnitureUid = null
     officeState.hoveredTile = null
   }, [officeState, editorState])
 
