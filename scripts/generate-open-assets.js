@@ -523,66 +523,116 @@ function generateCrates3() {
 
 function generateFullComputerCoffeeOff() {
   // 32×32, 2×2, canPlaceOnSurfaces, backgroundTiles:1
+  // Retro 90s beige CRT monitor + keyboard + coffee mug — compact size
+  const BEIGE = rgba(0xd4, 0xc8, 0xaa);
+  const BEIGE_DARK = rgba(0xb0, 0xa4, 0x88);
+  const BEIGE_SHADOW = rgba(0x90, 0x84, 0x6c);
+  const BEIGE_HI = rgba(0xe8, 0xdc, 0xc4);
+  const CRT_GREEN = rgba(0x20, 0x60, 0x30);
+  const CRT_GREEN_BR = rgba(0x30, 0x80, 0x40);
+  const GLARE = rgba(0x50, 0x70, 0x80, 80);
   const g = makeGrid(32, 32);
-  // Monitor back (bg row)
-  outlinedRect(g, 4, 2, 18, 3, DGRAY);
-  // Monitor screen
-  outlinedRect(g, 2, 5, 22, 12, DDGRAY);
-  fillRect(g, 3, 6, 20, 10, SCREEN_DARK);
-  fillRect(g, 4, 7, 18, 2, SCREEN_MED); // screen glare
-  // Monitor stand
-  fillRect(g, 10, 17, 6, 2, DGRAY);
-  fillRect(g, 8, 19, 10, 1, DGRAY);
-  // Keyboard
-  outlinedRect(g, 4, 21, 16, 4, DGRAY);
-  fillRect(g, 5, 22, 14, 2, MGRAY);
-  // Key dots
-  for (let x = 6; x < 18; x += 2) g[22][x] = LGRAY;
-  for (let x = 7; x < 17; x += 2) g[23][x] = LGRAY;
+  // CRT monitor body — compact beige box (centered around x=12)
+  outlinedRect(g, 6, 3, 14, 3, BEIGE_DARK, BK2); // top bulge (CRT depth)
+  outlinedRect(g, 5, 6, 16, 10, BEIGE, BK2);      // main body
+  fillRect(g, 6, 6, 14, 1, BEIGE_SHADOW);  // top bezel shadow
+  // Rounded CRT screen inset
+  fillRect(g, 8, 8, 10, 6, SCREEN_DARK);   // main screen
+  fillRect(g, 7, 9, 12, 4, SCREEN_DARK);   // wider middle
+  // Round corners
+  g[8][8] = BEIGE; g[8][17] = BEIGE;
+  g[13][8] = BEIGE; g[13][17] = BEIGE;
+  // Green phosphor text
+  fillRect(g, 9, 9, 5, 1, CRT_GREEN_BR);
+  fillRect(g, 9, 11, 8, 1, CRT_GREEN);
+  fillRect(g, 9, 13, 4, 1, CRT_GREEN_BR);
+  // Screen glare — small bright streak top-right
+  g[8][15] = GLARE; g[8][16] = GLARE;
+  g[9][16] = GLARE; g[9][17] = GLARE;
+  g[10][17] = GLARE;
+  // Power LED
+  g[14][7] = rgba(0x30, 0xc0, 0x30);
+  // CRT stand
+  fillRect(g, 10, 16, 6, 1, BEIGE_DARK);
+  outlinedRect(g, 8, 17, 10, 2, BEIGE_SHADOW, BK2);
+  // Keyboard — compact
+  outlinedRect(g, 6, 20, 14, 4, BEIGE, BK2);
+  fillRect(g, 7, 21, 12, 2, BEIGE_HI);
+  for (let x = 8; x < 18; x += 2) g[21][x] = BEIGE_DARK;
+  for (let x = 9; x < 17; x += 2) g[22][x] = BEIGE_DARK;
+  fillRect(g, 10, 22, 4, 1, BEIGE_DARK); // spacebar
   // Coffee mug (right side)
-  outlinedRect(g, 24, 22, 6, 6, WHITE);
-  fillRect(g, 25, 23, 4, 4, LGRAY);
-  // Coffee inside
-  fillRect(g, 25, 23, 4, 2, BROWN_MED);
-  // Handle
-  g[24][30] = BK; g[25][31] = BK; g[26][30] = BK;
+  outlinedRect(g, 23, 22, 6, 6, WHITE);
+  fillRect(g, 24, 23, 4, 4, LGRAY);
+  fillRect(g, 24, 23, 4, 2, BROWN_MED);
+  g[23][29] = BK; g[24][30] = BK; g[25][29] = BK;
   savePng('furniture/electronics/FULL_COMPUTER_COFFEE_OFF.png', 32, 32, g);
 }
 
 function generateLaptopLeft() {
   // 16×32, 1×2, canPlaceOnSurfaces, backgroundTiles:1
+  // Retro 90s chunky laptop — thick beige ThinkPad-style, matching back view size
+  const BEIGE = rgba(0xd4, 0xc8, 0xaa);
+  const BEIGE_DARK = rgba(0xb0, 0xa4, 0x88);
+  const BEIGE_HI = rgba(0xe8, 0xdc, 0xc4);
+  const BEIGE_SHADOW = rgba(0x90, 0x84, 0x6c);
+  const CRT_GREEN = rgba(0x20, 0x60, 0x30);
+  const CRT_GREEN_BR = rgba(0x30, 0x80, 0x40);
   const g = makeGrid(16, 32);
-  // Screen (angled left view)
-  outlinedRect(g, 1, 8, 13, 10, DGRAY);
-  fillRect(g, 2, 9, 11, 8, SCREEN_DARK);
-  fillRect(g, 3, 10, 9, 2, SCREEN_MED);
-  // Hinge
-  fillRect(g, 2, 18, 11, 1, DDGRAY);
-  // Base/keyboard
-  outlinedRect(g, 1, 19, 14, 6, MGRAY);
-  fillRect(g, 2, 20, 12, 4, LGRAY);
-  // Keys
-  for (let x = 3; x < 13; x += 2) g[21][x] = DGRAY;
-  for (let x = 4; x < 12; x += 2) g[22][x] = DGRAY;
-  // Trackpad
-  outlinedRect(g, 5, 23, 6, 2, DGRAY);
+  // Screen lid bezel — same size as back view
+  outlinedRect(g, 1, 7, 14, 11, BEIGE_DARK, BK2);
+  // Rounded CRT screen inset — clip corners for curved look
+  fillRect(g, 3, 9, 10, 7, SCREEN_DARK);
+  fillRect(g, 2, 10, 12, 5, SCREEN_DARK); // wider middle rows
+  // Round corners: fill the 4 corner pixels with bezel color
+  g[9][3] = BEIGE_DARK; g[9][12] = BEIGE_DARK;   // top corners
+  g[15][3] = BEIGE_DARK; g[15][12] = BEIGE_DARK;  // bottom corners
+  // Green phosphor text lines
+  fillRect(g, 4, 10, 5, 1, CRT_GREEN_BR);
+  fillRect(g, 4, 12, 7, 1, CRT_GREEN);
+  fillRect(g, 4, 14, 4, 1, CRT_GREEN_BR);
+  // Power LED on bezel
+  g[16][3] = rgba(0x30, 0xc0, 0x30);
+  // Chunky hinge
+  fillRect(g, 2, 18, 12, 2, DDGRAY);
+  g[18][4] = MGRAY; g[18][11] = MGRAY; // hinge knobs
+  // Thick base/keyboard — same width as back view
+  outlinedRect(g, 2, 20, 12, 4, BEIGE, BK2);
+  fillRect(g, 3, 21, 10, 2, BEIGE_HI);
+  // Key rows
+  for (let x = 4; x < 12; x += 2) g[21][x] = BEIGE_DARK;
+  for (let x = 5; x < 11; x += 2) g[22][x] = BEIGE_DARK;
+  // TrackPoint nub
+  g[22][7] = rgba(0xc0, 0x30, 0x30);
   savePng('furniture/electronics/LAPTOP_LEFT.png', 16, 32, g);
 }
 
 function generateLaptopBack() {
   // 16×32, 1×2, canPlaceOnSurfaces, backgroundTiles:1
+  // Retro 90s chunky laptop — back view showing thick lid
+  const BEIGE = rgba(0xd4, 0xc8, 0xaa);
+  const BEIGE_DARK = rgba(0xb0, 0xa4, 0x88);
+  const BEIGE_SHADOW = rgba(0x90, 0x84, 0x6c);
   const g = makeGrid(16, 32);
-  // Screen back (you see the back of the lid)
-  outlinedRect(g, 1, 8, 14, 10, DGRAY);
-  fillRect(g, 2, 9, 12, 8, METAL_MED);
-  fillRect(g, 3, 10, 10, 1, METAL_LIGHT); // highlight
-  // Logo dot
-  g[13][8] = METAL_HI;
-  // Hinge
-  fillRect(g, 2, 18, 12, 1, DDGRAY);
-  // Base edge visible from back
-  outlinedRect(g, 2, 19, 12, 3, MGRAY);
-  fillRect(g, 3, 20, 10, 1, LGRAY);
+  // Thick screen back (chunky lid)
+  outlinedRect(g, 1, 7, 14, 11, BEIGE_DARK, BK2);
+  fillRect(g, 2, 8, 12, 9, BEIGE);
+  fillRect(g, 3, 9, 10, 1, BEIGE_SHADOW); // top shadow line
+  // Manufacturer logo area (centered rectangle)
+  outlinedRect(g, 5, 11, 6, 3, BEIGE_SHADOW, BEIGE_DARK);
+  // Vent lines
+  for (let y = 15; y < 17; y++) {
+    for (let x = 4; x < 12; x += 2) g[y][x] = BEIGE_SHADOW;
+  }
+  // Chunky hinge
+  fillRect(g, 2, 18, 12, 2, DDGRAY);
+  g[18][4] = MGRAY; g[18][11] = MGRAY; // hinge knobs
+  // Base edge visible from back (thick)
+  outlinedRect(g, 2, 20, 12, 4, BEIGE, BK2);
+  fillRect(g, 3, 21, 10, 2, BEIGE_DARK);
+  // Port rectangles on back edge
+  fillRect(g, 4, 21, 2, 1, DDGRAY); // serial port
+  fillRect(g, 8, 21, 3, 1, DDGRAY); // parallel port
   savePng('furniture/electronics/LAPTOP_BACK.png', 16, 32, g);
 }
 
