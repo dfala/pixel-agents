@@ -9,7 +9,7 @@ import type { ExpandDirection } from '../office/editor/editorActions.js'
 import { getCatalogEntry, getRotatedType, getToggledType } from '../office/layout/furnitureCatalog.js'
 import { defaultZoom } from '../office/toolUtils.js'
 import { vscode } from '../wsApi.js'
-import { LAYOUT_SAVE_DEBOUNCE_MS, ZOOM_MIN, ZOOM_MAX } from '../constants.js'
+import { LAYOUT_SAVE_DEBOUNCE_MS, ZOOM_MIN, ZOOM_MAX, DEFAULT_FLOOR_COLOR, DEFAULT_GRASS_COLOR } from '../constants.js'
 
 export interface EditorActions {
   isEditMode: boolean
@@ -120,6 +120,13 @@ export function useEditorActions(
 
   const handleTileTypeChange = useCallback((type: TileTypeVal) => {
     editorState.selectedTileType = type
+    // Auto-set color preset when switching tile types
+    if (type === TileType.FLOOR_8) {
+      editorState.floorColor = { ...DEFAULT_GRASS_COLOR }
+    } else if (editorState.floorColor.h === DEFAULT_GRASS_COLOR.h && editorState.floorColor.s === DEFAULT_GRASS_COLOR.s) {
+      // Switching away from grass — restore default floor color
+      editorState.floorColor = { ...DEFAULT_FLOOR_COLOR }
+    }
     setEditorTick((n) => n + 1)
   }, [editorState])
 

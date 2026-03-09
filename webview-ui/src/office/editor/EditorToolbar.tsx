@@ -4,7 +4,7 @@ import type { TileType as TileTypeVal, FloorColor } from '../types.js'
 import { getCatalogByCategory, buildDynamicCatalog, getActiveCategories } from '../layout/furnitureCatalog.js'
 import type { FurnitureCategory, LoadedAssetData } from '../layout/furnitureCatalog.js'
 import { getCachedSprite } from '../sprites/spriteCache.js'
-import { getColorizedFloorSprite, getFloorPatternCount, hasFloorSprites } from '../floorTiles.js'
+import { getColorizedFloorSprite, getFloorTileValues, hasFloorSprites } from '../floorTiles.js'
 
 const btnStyle: React.CSSProperties = {
   padding: '3px 8px',
@@ -199,9 +199,7 @@ export function EditorToolbar({
 
   const categoryItems = getCatalogByCategory(activeCategory)
 
-  const patternCount = getFloorPatternCount()
-  // Wall is TileType 0, floor patterns are 1..patternCount
-  const floorPatterns = Array.from({ length: patternCount }, (_, i) => i + 1)
+  const floorPatterns = getFloorTileValues()
 
   const thumbSize = 36 // 2x for items
 

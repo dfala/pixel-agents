@@ -5,7 +5,7 @@
  * Run: node scripts/generate-open-assets.js
  *
  * Generates:
- *   - webview-ui/public/assets/floors.png (112×16, 7 grayscale 16×16 floor patterns)
+ *   - webview-ui/public/assets/floors.png (128×16, 8 grayscale 16×16 floor patterns)
  *   - webview-ui/public/assets/furniture/ (all furniture sprites)
  */
 
@@ -133,7 +133,7 @@ function makeGrid(w, h) {
 // ══════════════════════════════════════════════════════════
 
 function generateFloors() {
-  const W = 112, H = 16;
+  const W = 128, H = 16;
   const g = makeGrid(W, H);
 
   // Helper: set pixel in a specific tile (0-6)
@@ -219,6 +219,32 @@ function generateFloors() {
   for (let y = 2; y < 14; y++)
     for (let x = 2; x < 14; x++)
       setTile(6, x, y, 195);
+
+  // Tile 7: Grass — irregular tufts with varied brightness
+  // Seeded PRNG for reproducible grass texture
+  let seed = 42;
+  function prng() { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+  // Base layer: varied green-ish grayscale (will be colorized to green by user)
+  for (let y = 0; y < 16; y++)
+    for (let x = 0; x < 16; x++) {
+      const base = 160 + Math.floor(prng() * 40); // 160-200 range
+      setTile(7, x, y, base);
+    }
+  // Grass blade highlights — scattered bright pixels
+  const bladeCount = 12;
+  for (let i = 0; i < bladeCount; i++) {
+    const bx = Math.floor(prng() * 16);
+    const by = Math.floor(prng() * 16);
+    setTile(7, bx, by, 220 + Math.floor(prng() * 20)); // bright tip
+    // Short blade: 1px darker below
+    if (by + 1 < 16) setTile(7, bx, by + 1, 140 + Math.floor(prng() * 20));
+  }
+  // Dark earth patches — a few scattered darker spots
+  for (let i = 0; i < 6; i++) {
+    const px = Math.floor(prng() * 14) + 1;
+    const py = Math.floor(prng() * 14) + 1;
+    setTile(7, px, py, 120 + Math.floor(prng() * 20));
+  }
 
   savePng('floors.png', W, H, g);
 }
