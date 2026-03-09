@@ -18,6 +18,7 @@ import type { LayoutWatcher } from './layoutPersistence.js';
 import { readState, updateAgentSeats, updateSoundEnabled, updateMusicSettings, updatePetEnabled } from './statePersistence.js';
 import { readWorkspaceConfig, updateWorkspaceEntry } from './workspacePersistence.js';
 import { resolveWorkspaces, WORKSPACE_COLORS } from './workspaceUtils.js';
+import { findClaudePidForProject, releasePid, findTerminalAncestor, isProcessAlive, focusTerminalWindow } from './processFocus.js';
 
 // ── Shared state ─────────────────────────────────────────────
 
@@ -214,8 +215,41 @@ function sendInitSequence(ws: WebSocket, assetsRoot: string): void {
 
 // ── Client message handling ──────────────────────────────────
 
+async function handleFocusAgent(data: Record<string, unknown>): Promise<void> {
+	const id = data.agentId as number;
+	console.log(`[Server] focusAgent request for agent ${id}`);
+	const agent = agents.get(id);
+	if (!agent) return;
+
+	// Re-resolve if cached PID is stale or missing
+	if (agent.claudePid !== null && !isProcessAlive(agent.claudePid)) {
+		agent.claudePid = null;
+		agent.terminalPid = null;
+		agent.terminalApp = null;
+	}
+	if (agent.claudePid === null) {
+		await resolveAgentPids(agent);
+	}
+
+	if (agent.terminalPid && agent.terminalApp) {
+		const success = await focusTerminalWindow(agent.terminalPid, agent.terminalApp);
+		if (success) {
+			console.log(`[Server] Focused terminal for agent ${id} (${agent.terminalApp})`);
+		} else {
+			console.log(`[Server] Could not focus terminal for agent ${id}`);
+		}
+	} else {
+		console.log(`[Server] No terminal info for agent ${id} — cannot focus`);
+	}
+}
+
 function handleClientMessage(ws: WebSocket, msg: unknown, assetsRoot: string): void {
 	const data = msg as Record<string, unknown>;
+	// Handle async messages
+	if (data.type === 'focusAgent') {
+		handleFocusAgent(data);
+		return;
+	}
 	switch (data.type) {
 		case 'webviewReady':
 			sendInitSequence(ws, assetsRoot);
@@ -306,6 +340,9 @@ function createAgent(jsonlFile: string, projectDir: string, projectLabel: string
 		transcriptBuffer: [],
 		transcriptSeq: 0,
 		workspaceColor: wsInfo?.color ?? WORKSPACE_COLORS[0],
+		claudePid: null,
+		terminalPid: null,
+		terminalApp: null,
 	};
 
 	// Skip to end of file (don't replay history)
@@ -327,12 +364,34 @@ function createAgent(jsonlFile: string, projectDir: string, projectLabel: string
 	});
 
 	startFileWatching(id, jsonlFile, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers, broadcast);
+
+	// Resolve PID asynchronously (non-blocking)
+	resolveAgentPids(agent);
+}
+
+async function resolveAgentPids(agent: AgentState): Promise<void> {
+	try {
+		const pid = await findClaudePidForProject(agent.projectLabel);
+		if (pid === null) return;
+		agent.claudePid = pid;
+		const terminal = await findTerminalAncestor(pid);
+		if (terminal) {
+			agent.terminalPid = terminal.pid;
+			agent.terminalApp = terminal.appName;
+			console.log(`[Server] Agent ${agent.id} PID resolved: claude=${pid}, terminal=${terminal.appName} (PID ${terminal.pid})`);
+		} else {
+			console.log(`[Server] Agent ${agent.id} PID resolved: claude=${pid}, terminal=unknown`);
+		}
+	} catch (err) {
+		console.log(`[Server] Agent ${agent.id} PID resolution failed:`, err);
+	}
 }
 
 function removeAgent(id: number): void {
 	const agent = agents.get(id);
 	if (!agent) return;
 
+	if (agent.claudePid !== null) releasePid(agent.claudePid);
 	stopFileWatching(id, agents, fileWatchers, pollingTimers, waitingTimers, permissionTimers);
 	trackedFiles.delete(agent.jsonlFile);
 	agents.delete(id);

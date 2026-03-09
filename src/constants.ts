@@ -41,6 +41,9 @@ export const WORKSPACES_FILE_NAME = 'workspaces.json';
 // ── Notifications ──────────────────────────────────────────
 export const NOTIFICATION_MAX_ENTRIES = 50;
 
+// ── Process Focus ──────────────────────────────────────────
+export const PID_RESOLVE_TIMEOUT_MS = 3000;
+
 // ── Transcript ──────────────────────────────────────────────
 export const TRANSCRIPT_MAX_ENTRIES = 30;
 export const TRANSCRIPT_ASSISTANT_TEXT_MAX_CHARS = 500;

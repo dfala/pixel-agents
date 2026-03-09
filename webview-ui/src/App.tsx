@@ -221,9 +221,9 @@ function App() {
     editor.handleToggleEditMode,
   )
 
-  // Visual-only click handler (no terminal focus in standalone mode)
-  const handleClick = useCallback((_agentId: number) => {
-    // Agent click is handled by OfficeCanvas (selection + camera follow)
+  // Click agent → select in office + focus terminal window
+  const handleClick = useCallback((agentId: number) => {
+    vscode.postMessage({ type: 'focusAgent', agentId })
   }, [])
 
   const officeState = getOfficeState()

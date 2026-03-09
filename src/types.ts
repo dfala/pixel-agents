@@ -28,6 +28,12 @@ export interface AgentState {
 	transcriptBuffer: TranscriptEntry[];
 	transcriptSeq: number;
 	workspaceColor: string;
+	/** PID of the `claude` process writing to the JSONL file, or null if not yet resolved */
+	claudePid: number | null;
+	/** PID of the terminal emulator ancestor, or null */
+	terminalPid: number | null;
+	/** Name of the terminal emulator process (e.g., 'iTerm2', 'Terminal') */
+	terminalApp: string | null;
 }
 
 export interface NotificationEntry {
