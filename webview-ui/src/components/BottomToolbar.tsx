@@ -12,6 +12,9 @@ interface BottomToolbarProps {
   petEnabled: boolean
   onTogglePet: () => void
   workspaces: WorkspaceInfo[]
+  unreadCount: number
+  isNotificationPanelOpen: boolean
+  onToggleNotificationPanel: () => void
 }
 
 const panelStyle: React.CSSProperties = {
@@ -54,6 +57,9 @@ export function BottomToolbar({
   petEnabled,
   onTogglePet,
   workspaces,
+  unreadCount,
+  isNotificationPanelOpen,
+  onToggleNotificationPanel,
 }: BottomToolbarProps) {
   const [hovered, setHovered] = useState<string | null>(null)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -152,6 +158,45 @@ export function BottomToolbar({
           />
         </div>
       )}
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={onToggleNotificationPanel}
+          onMouseEnter={() => setHovered('notif')}
+          onMouseLeave={() => setHovered(null)}
+          style={
+            isNotificationPanelOpen
+              ? { ...btnActive }
+              : {
+                  ...btnBase,
+                  background: hovered === 'notif' ? 'var(--pixel-btn-hover-bg)' : btnBase.background,
+                }
+          }
+          title="Notifications"
+        >
+          {'\u{1F514}'}
+          {unreadCount > 0 && (
+            <span style={{
+              position: 'absolute',
+              top: 0,
+              right: 0,
+              background: 'var(--pixel-accent)',
+              color: '#fff',
+              fontSize: '11px',
+              minWidth: 16,
+              height: 16,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '0 3px',
+              borderRadius: 0,
+              lineHeight: 1,
+              fontFamily: 'monospace',
+            }}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </button>
+      </div>
       <div style={{ position: 'relative' }}>
         <button
           onClick={() => setIsSettingsOpen((v) => !v)}

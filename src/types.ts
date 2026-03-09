@@ -30,6 +30,15 @@ export interface AgentState {
 	workspaceColor: string;
 }
 
+export interface NotificationEntry {
+	id: number;
+	agentId: number;
+	type: 'permission' | 'turn_complete';
+	timestamp: number;
+	toolName?: string;
+	read: boolean;
+}
+
 export interface WorkspaceConfig {
 	version: 1;
 	workspaces: Array<{

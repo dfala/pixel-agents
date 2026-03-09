@@ -94,6 +94,15 @@ export interface TranscriptEntry {
   isError?: boolean
 }
 
+export interface NotificationEntry {
+  id: number
+  agentId: number
+  type: 'permission' | 'turn_complete'
+  timestamp: number
+  toolName?: string
+  read: boolean
+}
+
 export const FurnitureType = {
   // Original hand-drawn sprites (kept for backward compat)
   DESK: 'desk',

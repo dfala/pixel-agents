@@ -158,6 +158,11 @@ export const BREAK_FURNITURE_TYPES = new Set([
   'COFFEE_MUG',
 ])
 
+// ── Notification Panel ──────────────────────────────────────
+export const NOTIFICATION_PANEL_WIDTH_PX = 300
+export const NOTIFICATION_MAX_ENTRIES = 50
+export const NOTIFICATION_TIMESTAMP_REFRESH_MS = 30000
+
 // ── Expressions ────────────────────────────────────────────
 export const EXPRESSION_TIMED_DURATION_SEC = 3
 export const EXPRESSION_FADE_DURATION_SEC = 0.5

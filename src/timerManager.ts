@@ -1,5 +1,6 @@
 import type { AgentState } from './types.js';
 import { PERMISSION_TIMER_DELAY_MS } from './constants.js';
+import { pushNotification } from './server.js';
 
 export function clearAgentActivity(
 	agent: AgentState | undefined,
@@ -45,6 +46,7 @@ export function startWaitingTimer(
 		if (agent) {
 			agent.isWaiting = true;
 		}
+		pushNotification(agentId, 'turn_complete');
 		send({
 			type: 'agentStatus',
 			id: agentId,
@@ -103,6 +105,13 @@ export function startPermissionTimer(
 		if (hasNonExempt) {
 			agent.permissionSent = true;
 			console.log(`[Pixel Agents] Agent ${agentId}: possible permission wait detected`);
+			// Find the first non-exempt tool name for the notification
+			let permToolName: string | undefined;
+			for (const toolId of agent.activeToolIds) {
+				const tn = agent.activeToolNames.get(toolId);
+				if (tn && !permissionExemptTools.has(tn)) { permToolName = tn; break; }
+			}
+			pushNotification(agentId, 'permission', permToolName);
 			send({
 				type: 'agentToolPermission',
 				id: agentId,

@@ -32,7 +32,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
         borderTop: '1px solid var(--pixel-border)',
         margin: '6px 0',
         padding: '4px 0 0',
-        fontSize: '24px',
+        fontSize: '17px',
         color: 'var(--pixel-text-dim)',
         opacity: 0.6,
       }}>
@@ -49,7 +49,7 @@ function TranscriptEntryRow({ entry }: { entry: TranscriptEntry }) {
         style={{ margin: '4px 0', position: 'relative' }}
       >
         <div style={{
-          fontSize: '24px',
+          fontSize: '17px',
           color: 'var(--pixel-text)',
           lineHeight: 1.3,
           wordBreak: 'break-word',
@@ -242,7 +242,7 @@ export function TranscriptPanel({
         )}
         <span style={{
           flex: 1,
-          fontSize: '24px',
+          fontSize: '17px',
           color: 'var(--pixel-text)',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -256,7 +256,7 @@ export function TranscriptPanel({
             background: 'none',
             border: 'none',
             color: 'rgba(255, 255, 255, 0.5)',
-            fontSize: '24px',
+            fontSize: '17px',
             cursor: 'pointer',
             padding: '0 4px',
             borderRadius: 0,
@@ -282,7 +282,7 @@ export function TranscriptPanel({
         {entries.length === 0 ? (
           <div style={{
             color: 'var(--pixel-text-dim)',
-            fontSize: '24px',
+            fontSize: '17px',
             textAlign: 'center',
             padding: '20px 0',
           }}>
@@ -309,7 +309,7 @@ export function TranscriptPanel({
             border: '2px solid var(--pixel-border)',
             borderRadius: 0,
             padding: '3px 10px',
-            fontSize: '24px',
+            fontSize: '17px',
             cursor: 'pointer',
             boxShadow: 'var(--pixel-shadow)',
             zIndex: 1,

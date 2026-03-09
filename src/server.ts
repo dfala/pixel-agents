@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import type { WebSocket } from 'ws';
-import type { AgentState, WorkspaceInfo } from './types.js';
-import { PROJECT_DISCOVERY_INTERVAL_MS, SESSION_STALENESS_MS } from './constants.js';
+import type { AgentState, WorkspaceInfo, NotificationEntry } from './types.js';
+import { PROJECT_DISCOVERY_INTERVAL_MS, SESSION_STALENESS_MS, NOTIFICATION_MAX_ENTRIES } from './constants.js';
 import { startFileWatching, stopFileWatching } from './fileWatcher.js';
 import { scanAllProjects } from './projectScanner.js';
 import {
@@ -33,6 +33,26 @@ let nextAgentId = 1;
 let discoveryTimer: ReturnType<typeof setInterval> | null = null;
 let layoutWatcher: LayoutWatcher | null = null;
 let workspaceInfoCache: Map<string, WorkspaceInfo> = new Map();
+
+// ── Global notification log ──────────────────────────────────
+const notifications: NotificationEntry[] = [];
+let notificationSeq = 0;
+
+export function pushNotification(agentId: number, type: NotificationEntry['type'], toolName?: string): void {
+	const entry: NotificationEntry = {
+		id: notificationSeq++,
+		agentId,
+		type,
+		timestamp: Date.now(),
+		toolName,
+		read: false,
+	};
+	notifications.unshift(entry);
+	if (notifications.length > NOTIFICATION_MAX_ENTRIES) {
+		notifications.pop();
+	}
+	broadcast({ type: 'notification', entry });
+}
 
 function refreshWorkspaceCache(): void {
 	const config = readWorkspaceConfig();
@@ -185,6 +205,11 @@ function sendInitSequence(ws: WebSocket, assetsRoot: string): void {
 		type: 'workspacesLoaded',
 		workspaces: [...workspaceInfoCache.values()],
 	});
+
+	// 10. Notification buffer
+	if (notifications.length > 0) {
+		sendTo(ws, { type: 'notificationBuffer', entries: notifications });
+	}
 }
 
 // ── Client message handling ──────────────────────────────────

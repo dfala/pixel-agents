@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { OfficeState } from '../office/engine/officeState.js'
-import type { OfficeLayout, ToolActivity, TranscriptEntry } from '../office/types.js'
+import type { OfficeLayout, ToolActivity, TranscriptEntry, NotificationEntry } from '../office/types.js'
 import { extractToolName } from '../office/toolUtils.js'
 import { migrateLayoutColors } from '../office/layout/layoutSerializer.js'
 import { buildDynamicCatalog } from '../office/layout/furnitureCatalog.js'
@@ -10,7 +10,7 @@ import { setCharacterTemplates } from '../office/sprites/spriteData.js'
 import { vscode, addMessageListener, removeMessageListener } from '../wsApi.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
 import { setMusicEnabled, setMusicVolume } from '../backgroundMusic.js'
-import { TRANSCRIPT_MAX_ENTRIES } from '../constants.js'
+import { TRANSCRIPT_MAX_ENTRIES, NOTIFICATION_MAX_ENTRIES } from '../constants.js'
 
 export interface SubagentCharacter {
   id: number
@@ -61,6 +61,10 @@ export interface ExtensionMessageState {
   workspaces: WorkspaceInfo[]
   petEnabled: boolean
   transcriptBuffers: Record<number, TranscriptEntry[]>
+  notifications: NotificationEntry[]
+  unreadCount: number
+  markNotificationsRead: () => void
+  clearNotifications: () => void
 }
 
 function saveAgentSeats(os: OfficeState): void {
@@ -90,6 +94,18 @@ export function useExtensionMessages(
   const [workspaces, setWorkspaces] = useState<WorkspaceInfo[]>([])
   const [petEnabled, setPetEnabled] = useState(false)
   const [transcriptBuffers, setTranscriptBuffers] = useState<Record<number, TranscriptEntry[]>>({})
+  const [notifications, setNotifications] = useState<NotificationEntry[]>([])
+  const [unreadCount, setUnreadCount] = useState(0)
+
+  const markNotificationsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => (n.read ? n : { ...n, read: true })))
+    setUnreadCount(0)
+  }, [])
+
+  const clearNotifications = useCallback(() => {
+    setNotifications([])
+    setUnreadCount(0)
+  }, [])
 
   // Track whether initial layout has been loaded (ref to avoid re-render)
   const layoutReadyRef = useRef(false)
@@ -435,6 +451,20 @@ export function useExtensionMessages(
         if (entry.type === 'assistant_text') {
           os.showThinkingExpression(agentId)
         }
+      } else if (msg.type === 'notificationBuffer') {
+        const entries = msg.entries as NotificationEntry[]
+        setNotifications(entries)
+        setUnreadCount(entries.filter((n) => !n.read).length)
+      } else if (msg.type === 'notification') {
+        const entry = msg.entry as NotificationEntry
+        setNotifications((prev) => {
+          const updated = [entry, ...prev]
+          if (updated.length > NOTIFICATION_MAX_ENTRIES) {
+            updated.pop()
+          }
+          return updated
+        })
+        setUnreadCount((prev) => prev + 1)
       }
     }
     addMessageListener(handler)
@@ -442,5 +472,5 @@ export function useExtensionMessages(
     return () => removeMessageListener(handler)
   }, [getOfficeState])
 
-  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, workspaces, petEnabled, transcriptBuffers }
+  return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaceFolders, workspaces, petEnabled, transcriptBuffers, notifications, unreadCount, markNotificationsRead, clearNotifications }
 }

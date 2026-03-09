@@ -17,6 +17,7 @@ import {
 	TRANSCRIPT_TOOL_ARGS_MAX_CHARS,
 	TRANSCRIPT_TOOL_OUTPUT_MAX_CHARS,
 } from './constants.js';
+import { pushNotification } from './server.js';
 
 export const PERMISSION_EXEMPT_TOOLS = new Set(['Task', 'AskUserQuestion']);
 
@@ -228,6 +229,7 @@ export function processTranscriptLine(
 			agent.isWaiting = true;
 			agent.permissionSent = false;
 			agent.hadToolsInTurn = false;
+			pushNotification(agentId, 'turn_complete');
 			send({
 				type: 'agentStatus',
 				id: agentId,

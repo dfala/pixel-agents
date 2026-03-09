@@ -15,6 +15,7 @@ import { ZoomControls } from './components/ZoomControls.js'
 import { BottomToolbar } from './components/BottomToolbar.js'
 import { DebugView } from './components/DebugView.js'
 import { TranscriptPanel } from './components/TranscriptPanel.js'
+import { NotificationPanel } from './components/NotificationPanel.js'
 import { vscode } from './wsApi.js'
 
 // Game state lives outside React — updated imperatively by message handlers
@@ -123,15 +124,53 @@ function App() {
 
   const isEditDirty = useCallback(() => editor.isEditMode && editor.isDirty, [editor.isEditMode, editor.isDirty])
 
-  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaces, petEnabled, transcriptBuffers } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
+  const { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets, workspaces, petEnabled, transcriptBuffers, notifications, unreadCount, markNotificationsRead, clearNotifications } = useExtensionMessages(getOfficeState, editor.setLastSavedLayout, isEditDirty)
 
   const [isDebugMode, setIsDebugMode] = useState(false)
   const [petOn, setPetOn] = useState(false)
   const [panelAgentId, setPanelAgentId] = useState<number | null>(null)
+  const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false)
 
   const handleSelectionChange = useCallback((agentId: number | null) => {
     setPanelAgentId(agentId)
+    if (agentId !== null) setIsNotificationPanelOpen(false)
   }, [])
+
+  const handleToggleNotificationPanel = useCallback(() => {
+    setIsNotificationPanelOpen((prev) => {
+      const next = !prev
+      if (next) {
+        markNotificationsRead()
+        // Close transcript panel when opening notifications
+        const os = getOfficeState()
+        os.selectedAgentId = null
+        os.cameraFollowId = null
+        setPanelAgentId(null)
+      }
+      return next
+    })
+  }, [markNotificationsRead])
+
+  const handleNotificationSelectAgent = useCallback((agentId: number) => {
+    const os = getOfficeState()
+    const ch = os.characters.get(agentId)
+    if (!ch) return
+    os.selectedAgentId = agentId
+    os.cameraFollowId = agentId
+    setPanelAgentId(agentId)
+    setIsNotificationPanelOpen(false)
+  }, [])
+
+  const handleClearNotifications = useCallback(() => {
+    clearNotifications()
+  }, [clearNotifications])
+
+  // Auto-mark notifications as read while panel is open
+  useEffect(() => {
+    if (isNotificationPanelOpen && unreadCount > 0) {
+      markNotificationsRead()
+    }
+  }, [isNotificationPanelOpen, unreadCount, markNotificationsRead])
 
   // Close transcript panel if the displayed agent is removed
   useEffect(() => {
@@ -268,6 +307,9 @@ function App() {
         petEnabled={petOn}
         onTogglePet={handleTogglePet}
         workspaces={workspaces}
+        unreadCount={unreadCount}
+        isNotificationPanelOpen={isNotificationPanelOpen}
+        onToggleNotificationPanel={handleToggleNotificationPanel}
       />
 
       {editor.isEditMode && editor.isDirty && (
@@ -351,7 +393,17 @@ function App() {
         />
       )}
 
-      {panelAgentId !== null && (() => {
+      {isNotificationPanelOpen && (
+        <NotificationPanel
+          notifications={notifications}
+          agents={agents}
+          onSelectAgent={handleNotificationSelectAgent}
+          onClose={() => setIsNotificationPanelOpen(false)}
+          onClear={handleClearNotifications}
+        />
+      )}
+
+      {panelAgentId !== null && !isNotificationPanelOpen && (() => {
         const os = getOfficeState()
         const ch = os.characters.get(panelAgentId)
         const agentLabel = ch?.folderName || `Agent ${panelAgentId}`

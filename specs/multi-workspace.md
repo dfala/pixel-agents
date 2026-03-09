@@ -1,6 +1,6 @@
 # Multi-Workspace Support
 
-**Status: Not yet implemented**
+**Status: Implemented**
 
 **Monitor Claude sessions across multiple project directories, color-coded by workspace.**
 

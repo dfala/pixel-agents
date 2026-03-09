@@ -1,6 +1,6 @@
 # Notification Center
 
-**Status: Not yet implemented**
+**Status: Implemented**
 
 **A scrollable log of permission requests and turn completions, with timestamps and click-to-focus.**
 

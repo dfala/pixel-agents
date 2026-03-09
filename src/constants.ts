@@ -38,6 +38,9 @@ export const LAYOUT_FILE_POLL_INTERVAL_MS = 2000;
 export const STATE_FILE_NAME = 'state.json';
 export const WORKSPACES_FILE_NAME = 'workspaces.json';
 
+// ── Notifications ──────────────────────────────────────────
+export const NOTIFICATION_MAX_ENTRIES = 50;
+
 // ── Transcript ──────────────────────────────────────────────
 export const TRANSCRIPT_MAX_ENTRIES = 30;
 export const TRANSCRIPT_ASSISTANT_TEXT_MAX_CHARS = 500;

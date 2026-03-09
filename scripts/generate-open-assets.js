@@ -275,16 +275,13 @@ function generateTableWoodLg() {
   // Front face
   outlinedRect(g, 0, 21, 32, 9, WOOD_MED);
   fillRect(g, 1, 22, 30, 1, WOOD_LIGHT);
-  // Legs (extend through rows 2-3)
-  fillRect(g, 1, 30, 2, 2, WOOD_DARK);
-  fillRect(g, 29, 30, 2, 2, WOOD_DARK);
-  // Open space below table
-  fillRect(g, 1, 32, 30, 28, T);
-  // Just the legs continuing
-  fillRect(g, 1, 32, 2, 28, WOOD_DARK);
-  fillRect(g, 29, 32, 2, 28, WOOD_DARK);
-  // Cross bar
-  outlinedRect(g, 1, 48, 30, 2, WOOD_DARK);
+  // Front panel below tabletop (solid, no transparent gap)
+  outlinedRect(g, 0, 30, 32, 26, WOOD_MED);
+  fillRect(g, 1, 31, 30, 1, WOOD_LIGHT); // highlight stripe
+  fillRect(g, 1, 44, 30, 1, WOOD_DARK);  // shadow stripe
+  // Legs below panel
+  fillRect(g, 1, 56, 3, 8, WOOD_DARK);
+  fillRect(g, 28, 56, 3, 8, WOOD_DARK);
   // Feet
   fillRect(g, 0, 60, 4, 4, WOOD_DARK);
   fillRect(g, 28, 60, 4, 4, WOOD_DARK);
@@ -332,34 +329,34 @@ function generateCoffeeTableLg() {
 // ── CHAIRS ───────────────────────────────────────────────
 
 function generateChairCushionedRight() {
-  // 16×16, 1×1, chair facing right
+  // 16×16, 1×1, chair facing right (backrest on left, seat opens right)
   const g = makeGrid(16, 16);
   // Seat cushion (tan/cream)
   outlinedRect(g, 2, 6, 12, 8, CREAM);
   fillRect(g, 3, 7, 10, 2, CREAM_LIGHT); // highlight
-  // Back rest (right side) - small vertical piece
-  outlinedRect(g, 12, 3, 3, 11, CREAM_DARK);
-  fillRect(g, 13, 4, 1, 9, CREAM);
-  // Legs
-  g[14][3] = WOOD_DARK; g[15][3] = WOOD_DARK;
-  g[14][11] = WOOD_DARK; g[15][11] = WOOD_DARK;
-  g[14][4] = WOOD_DARK; g[14][10] = WOOD_DARK;
-  savePng('furniture/chairs/CHAIR_CUSHIONED_RIGHT.png', 16, 16, g);
-}
-
-function generateChairCushionedLeft() {
-  // 16×16, 1×1, chair facing left
-  const g = makeGrid(16, 16);
-  // Seat cushion
-  outlinedRect(g, 2, 6, 12, 8, CREAM);
-  fillRect(g, 3, 7, 10, 2, CREAM_LIGHT);
-  // Back rest (left side)
+  // Back rest (left side) - person faces right
   outlinedRect(g, 1, 3, 3, 11, CREAM_DARK);
   fillRect(g, 2, 4, 1, 9, CREAM);
   // Legs
   g[14][4] = WOOD_DARK; g[15][4] = WOOD_DARK;
   g[14][12] = WOOD_DARK; g[15][12] = WOOD_DARK;
   g[14][5] = WOOD_DARK; g[14][11] = WOOD_DARK;
+  savePng('furniture/chairs/CHAIR_CUSHIONED_RIGHT.png', 16, 16, g);
+}
+
+function generateChairCushionedLeft() {
+  // 16×16, 1×1, chair facing left (backrest on right, seat opens left)
+  const g = makeGrid(16, 16);
+  // Seat cushion
+  outlinedRect(g, 2, 6, 12, 8, CREAM);
+  fillRect(g, 3, 7, 10, 2, CREAM_LIGHT);
+  // Back rest (right side) - person faces left
+  outlinedRect(g, 12, 3, 3, 11, CREAM_DARK);
+  fillRect(g, 13, 4, 1, 9, CREAM);
+  // Legs
+  g[14][3] = WOOD_DARK; g[15][3] = WOOD_DARK;
+  g[14][11] = WOOD_DARK; g[15][11] = WOOD_DARK;
+  g[14][4] = WOOD_DARK; g[14][10] = WOOD_DARK;
   savePng('furniture/chairs/CHAIR_CUSHIONED_LEFT.png', 16, 16, g);
 }
 
@@ -378,29 +375,9 @@ function generateStool() {
 }
 
 function generateChairCushionedLgRight() {
-  // 16×32, 1×2, large cushioned chair facing right
+  // 16×32, 1×2, large cushioned chair facing right (backrest on left, seat opens right)
   const g = makeGrid(16, 32);
-  // Back rest (top portion, right side)
-  outlinedRect(g, 10, 4, 5, 18, CREAM_DARK);
-  fillRect(g, 11, 5, 3, 16, CREAM);
-  fillRect(g, 12, 5, 1, 16, CREAM_LIGHT);
-  // Seat cushion
-  outlinedRect(g, 1, 16, 14, 8, CREAM);
-  fillRect(g, 2, 17, 12, 2, CREAM_LIGHT);
-  // Arm rest (left)
-  outlinedRect(g, 1, 14, 3, 10, CREAM_DARK);
-  // Legs
-  fillRect(g, 2, 24, 2, 4, WOOD_DARK);
-  fillRect(g, 12, 24, 2, 4, WOOD_DARK);
-  // Feet
-  g[28][2] = WOOD_DARK; g[28][13] = WOOD_DARK;
-  savePng('furniture/chairs/CHAIR_CUSHIONED_LG_RIGHT.png', 16, 32, g);
-}
-
-function generateChairCushionedLgLeft() {
-  // 16×32, 1×2, large cushioned chair facing left
-  const g = makeGrid(16, 32);
-  // Back rest (top portion, left side)
+  // Back rest (left side) - person faces right
   outlinedRect(g, 1, 4, 5, 18, CREAM_DARK);
   fillRect(g, 2, 5, 3, 16, CREAM);
   fillRect(g, 3, 5, 1, 16, CREAM_LIGHT);
@@ -409,6 +386,25 @@ function generateChairCushionedLgLeft() {
   fillRect(g, 2, 17, 12, 2, CREAM_LIGHT);
   // Arm rest (right)
   outlinedRect(g, 12, 14, 3, 10, CREAM_DARK);
+  // Legs
+  fillRect(g, 2, 24, 2, 4, WOOD_DARK);
+  fillRect(g, 12, 24, 2, 4, WOOD_DARK);
+  g[28][2] = WOOD_DARK; g[28][13] = WOOD_DARK;
+  savePng('furniture/chairs/CHAIR_CUSHIONED_LG_RIGHT.png', 16, 32, g);
+}
+
+function generateChairCushionedLgLeft() {
+  // 16×32, 1×2, large cushioned chair facing left (backrest on right, seat opens left)
+  const g = makeGrid(16, 32);
+  // Back rest (right side) - person faces left
+  outlinedRect(g, 10, 4, 5, 18, CREAM_DARK);
+  fillRect(g, 11, 5, 3, 16, CREAM);
+  fillRect(g, 12, 5, 1, 16, CREAM_LIGHT);
+  // Seat cushion
+  outlinedRect(g, 1, 16, 14, 8, CREAM);
+  fillRect(g, 2, 17, 12, 2, CREAM_LIGHT);
+  // Arm rest (left)
+  outlinedRect(g, 1, 14, 3, 10, CREAM_DARK);
   // Legs
   fillRect(g, 2, 24, 2, 4, WOOD_DARK);
   fillRect(g, 12, 24, 2, 4, WOOD_DARK);
