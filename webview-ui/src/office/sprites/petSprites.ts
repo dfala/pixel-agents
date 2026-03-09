@@ -10,7 +10,7 @@
  *  - White forehead + snout contrasting with mask
  *  - Gray body, lighter belly
  *  - Dark ear tips
- *  - Striped tail (alternating dark/gray rings)
+ *  - Bushy striped tail (alternating dark/gray rings) visible in all views
  */
 
 import type { SpriteData, Direction } from '../types.js'
@@ -25,8 +25,10 @@ const L = '#A0A8B0' // light gray (belly, chest)
 const W = '#D8D8D8' // white (face, snout)
 const E = '#1A1A1A' // eyes
 const N = '#2D2D2D' // nose
+const T = '#606870' // tail mid-tone (between G and D for ring pattern)
 
 // ── DOWN-FACING (front view) ────────────────────────────────────
+// Tail curls out to the right side, visible as striped appendage
 
 const RACCOON_WALK_DOWN_1: SpriteData = [
   [_, _, D, G, G, G, G, D, _, _],
@@ -35,10 +37,10 @@ const RACCOON_WALK_DOWN_1: SpriteData = [
   [_, _, G, W, N, N, W, G, _, _],
   [_, _, G, L, G, G, L, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, L, L, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, _, G, G, _, G, _, _],
-  [_, _, G, _, _, _, _, G, _, _],
+  [_, _, G, G, L, L, G, G, D, _],
+  [_, _, G, G, G, G, G, G, G, D],
+  [_, _, G, _, G, G, _, _, T, G],
+  [_, _, G, _, _, _, _, _, D, _],
 ]
 
 const RACCOON_WALK_DOWN_2: SpriteData = [
@@ -49,8 +51,8 @@ const RACCOON_WALK_DOWN_2: SpriteData = [
   [_, _, G, L, G, G, L, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
   [_, _, G, G, L, L, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, _, _, _],
+  [_, _, G, G, G, G, G, G, D, G],
+  [_, _, _, G, G, G, G, _, G, D],
   [_, _, _, G, _, _, G, _, _, _],
 ]
 
@@ -61,9 +63,9 @@ const RACCOON_IDLE_DOWN: SpriteData = [
   [_, _, G, W, N, N, W, G, _, _],
   [_, _, G, L, G, G, L, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, L, L, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, _, _, _],
+  [_, _, G, G, L, L, G, G, D, _],
+  [_, _, G, G, G, G, G, G, G, D],
+  [_, _, _, G, G, G, G, _, T, _],
   [_, _, _, _, _, _, _, _, _, _],
 ]
 
@@ -75,9 +77,9 @@ const RACCOON_SLEEP_DOWN: SpriteData = [
   [_, _, G, G, G, G, G, G, _, _],
   [_, G, D, E, W, W, E, D, G, _],
   [_, G, G, G, N, G, G, G, G, _],
-  [_, _, G, G, G, G, G, G, D, _],
-  [_, _, G, L, L, L, L, G, G, _],
-  [_, _, _, G, G, G, G, D, _, _],
+  [_, _, G, G, G, G, G, G, D, G],
+  [_, _, G, L, L, L, L, G, G, D],
+  [_, _, _, G, G, G, G, D, T, _],
 ]
 
 const RACCOON_PLAY_DOWN: SpriteData = [
@@ -86,14 +88,15 @@ const RACCOON_PLAY_DOWN: SpriteData = [
   [_, G, D, E, W, E, D, G, _, _],
   [_, G, G, W, N, W, G, G, _, _],
   [_, _, G, L, G, G, L, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, G, _, G, L, L, G, _, G, _],
-  [_, G, _, _, _, _, _, _, G, _],
+  [_, _, G, G, G, G, G, G, D, _],
+  [_, _, G, G, G, G, G, G, G, D],
+  [_, G, _, G, L, L, G, _, T, _],
+  [_, G, _, _, _, _, _, _, _, _],
   [_, _, _, _, _, _, _, _, _, _],
 ]
 
 // ── UP-FACING (back view) ───────────────────────────────────────
+// Tail hangs down behind, striped pattern clearly visible
 
 const RACCOON_WALK_UP_1: SpriteData = [
   [_, _, D, G, G, G, G, D, _, _],
@@ -102,10 +105,10 @@ const RACCOON_WALK_UP_1: SpriteData = [
   [_, _, G, G, G, G, G, G, _, _],
   [_, _, G, D, G, G, D, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, _, G, G, _, G, _, _],
-  [_, _, G, _, _, _, _, G, _, _],
+  [_, _, G, G, G, G, G, G, D, _],
+  [_, _, G, G, G, G, G, G, G, D],
+  [_, _, G, _, G, G, _, _, T, G],
+  [_, _, G, _, _, _, _, _, D, _],
 ]
 
 const RACCOON_WALK_UP_2: SpriteData = [
@@ -116,8 +119,8 @@ const RACCOON_WALK_UP_2: SpriteData = [
   [_, _, G, D, G, G, D, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, _, _, _],
+  [_, _, G, G, G, G, G, G, D, G],
+  [_, _, _, G, G, G, G, _, G, D],
   [_, _, _, G, _, _, G, _, _, _],
 ]
 
@@ -128,9 +131,9 @@ const RACCOON_IDLE_UP: SpriteData = [
   [_, _, G, G, G, G, G, G, _, _],
   [_, _, G, D, G, G, D, G, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, _, _, _],
+  [_, _, G, G, G, G, G, G, D, _],
+  [_, _, G, G, G, G, G, G, G, D],
+  [_, _, _, G, G, G, G, _, T, _],
   [_, _, _, _, _, _, _, _, _, _],
 ]
 
@@ -142,9 +145,9 @@ const RACCOON_SLEEP_UP: SpriteData = [
   [_, _, G, G, G, G, G, G, _, _],
   [_, G, D, G, G, G, G, D, G, _],
   [_, G, G, G, G, G, G, G, G, _],
-  [_, _, G, G, G, G, G, G, D, _],
-  [_, _, G, D, G, G, D, G, G, _],
-  [_, _, _, G, G, G, G, D, _, _],
+  [_, _, G, G, G, G, G, G, D, G],
+  [_, _, G, D, G, G, D, G, G, D],
+  [_, _, _, G, G, G, G, D, T, _],
 ]
 
 const RACCOON_PLAY_UP: SpriteData = [
@@ -153,14 +156,15 @@ const RACCOON_PLAY_UP: SpriteData = [
   [_, G, G, G, G, G, G, G, G, _],
   [_, _, G, G, G, G, G, G, _, _],
   [_, _, G, D, G, G, D, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, G, _, G, G, G, G, _, G, _],
-  [_, G, _, _, _, _, _, _, G, _],
+  [_, _, G, G, G, G, G, G, D, _],
+  [_, _, G, G, G, G, G, G, G, D],
+  [_, G, _, G, G, G, G, _, T, _],
+  [_, G, _, _, _, _, _, _, _, _],
   [_, _, _, _, _, _, _, _, _, _],
 ]
 
 // ── RIGHT-FACING (side profile) ─────────────────────────────────
+// Tail extends behind (to the left in sprite), bushy with striped rings
 
 const RACCOON_WALK_RIGHT_1: SpriteData = [
   [_, _, _, _, G, D, _, _, _, _],
@@ -169,10 +173,10 @@ const RACCOON_WALK_RIGHT_1: SpriteData = [
   [_, _, _, G, W, N, _, _, _, _],
   [_, _, _, G, G, G, G, _, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, D, _],
-  [_, _, G, G, G, G, G, G, G, _],
-  [_, _, _, G, _, _, G, _, D, _],
-  [_, _, _, G, _, _, G, _, _, _],
+  [_, D, G, G, G, G, G, G, _, _],
+  [D, T, D, G, G, G, G, G, _, _],
+  [_, _, G, _, G, _, _, G, _, _],
+  [_, _, _, _, G, _, _, G, _, _],
 ]
 
 const RACCOON_WALK_RIGHT_2: SpriteData = [
@@ -182,10 +186,10 @@ const RACCOON_WALK_RIGHT_2: SpriteData = [
   [_, _, _, G, W, N, _, _, _, _],
   [_, _, _, G, G, G, G, _, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, D, _],
-  [_, _, G, G, G, G, G, G, G, _],
-  [_, _, G, _, _, _, _, G, D, _],
-  [_, _, G, _, _, _, _, G, _, _],
+  [_, D, G, G, G, G, G, G, _, _],
+  [D, T, D, G, G, G, G, G, _, _],
+  [_, _, _, G, _, _, G, _, _, _],
+  [_, _, _, G, _, _, _, G, _, _],
 ]
 
 const RACCOON_IDLE_RIGHT: SpriteData = [
@@ -195,10 +199,10 @@ const RACCOON_IDLE_RIGHT: SpriteData = [
   [_, _, _, G, W, N, _, _, _, _],
   [_, _, _, G, G, G, G, _, _, _],
   [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, _, _, _],
-  [_, _, _, _, _, _, _, _, D, _],
+  [_, D, G, G, G, G, G, G, _, _],
+  [D, T, D, G, G, G, G, G, _, _],
+  [_, G, _, G, G, G, G, _, _, _],
+  [_, D, _, _, _, _, _, _, _, _],
 ]
 
 const RACCOON_SLEEP_RIGHT: SpriteData = [
@@ -209,9 +213,9 @@ const RACCOON_SLEEP_RIGHT: SpriteData = [
   [_, _, _, _, _, _, _, _, _, _],
   [_, _, _, G, D, _, _, _, _, _],
   [_, _, G, D, E, W, _, _, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, G, D, _],
-  [_, _, _, _, G, G, G, D, _, _],
+  [_, D, G, G, G, G, G, G, _, _],
+  [D, T, D, G, G, G, G, G, _, _],
+  [_, G, D, _, G, G, G, _, _, _],
 ]
 
 const RACCOON_PLAY_RIGHT: SpriteData = [
@@ -220,10 +224,10 @@ const RACCOON_PLAY_RIGHT: SpriteData = [
   [_, _, _, D, D, E, W, _, _, _],
   [_, _, _, G, W, N, _, _, _, _],
   [_, _, G, G, G, G, G, _, _, _],
-  [_, _, G, G, G, G, G, G, _, _],
-  [_, _, _, G, G, G, G, G, _, _],
-  [_, G, _, G, G, G, G, _, G, _],
-  [_, G, _, _, _, _, _, _, G, _],
+  [_, D, G, G, G, G, G, G, _, _],
+  [D, T, D, G, G, G, G, G, _, _],
+  [_, G, _, G, G, G, G, _, _, _],
+  [_, _, G, _, _, _, _, G, _, _],
   [_, _, _, _, _, _, _, _, _, _],
 ]
 

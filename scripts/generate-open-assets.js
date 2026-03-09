@@ -387,16 +387,25 @@ function generateChairCushionedLeft() {
 }
 
 function generateStool() {
-  // 16×16, 1×1
+  // 16×16, 1×1 — simple wooden chair (front view)
   const g = makeGrid(16, 16);
-  // Seat (round-ish)
-  outlinedRect(g, 4, 5, 8, 5, WOOD_LIGHT);
-  fillRect(g, 5, 6, 6, 1, WOOD_HI);
-  // Legs (4 splayed)
-  g[10][5] = WOOD_DARK; g[11][4] = WOOD_DARK; g[12][3] = WOOD_DARK;
-  g[10][10] = WOOD_DARK; g[11][11] = WOOD_DARK; g[12][12] = WOOD_DARK;
-  g[10][6] = WOOD_DARK; g[11][6] = WOOD_DARK; g[12][5] = WOOD_DARK; g[13][5] = WOOD_DARK;
-  g[10][9] = WOOD_DARK; g[11][9] = WOOD_DARK; g[12][10] = WOOD_DARK; g[13][10] = WOOD_DARK;
+  // Backrest (upper part)
+  outlinedRect(g, 4, 2, 8, 5, WOOD_MED);
+  fillRect(g, 5, 3, 6, 3, WOOD_LIGHT);
+  fillRect(g, 5, 3, 6, 1, WOOD_HI); // highlight on backrest top
+  // Backrest vertical slats
+  g[4][6] = WOOD_DARK; g[5][6] = WOOD_DARK;
+  g[4][9] = WOOD_DARK; g[5][9] = WOOD_DARK;
+  // Seat (wider, solid plank)
+  outlinedRect(g, 3, 7, 10, 3, WOOD_MED);
+  fillRect(g, 4, 8, 8, 1, WOOD_HI); // seat highlight
+  // Front legs (sturdy, 2px wide)
+  fillRect(g, 4, 10, 2, 5, WOOD_DARK);
+  fillRect(g, 10, 10, 2, 5, WOOD_DARK);
+  // Leg highlights (inner edge)
+  for (let y = 10; y < 15; y++) { g[y][5] = WOOD_MED; g[y][10] = WOOD_MED; }
+  // Cross bar between legs
+  fillRect(g, 6, 12, 4, 1, WOOD_DARK);
   savePng('furniture/chairs/STOOL.png', 16, 16, g);
 }
 

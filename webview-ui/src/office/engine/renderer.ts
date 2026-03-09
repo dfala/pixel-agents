@@ -154,6 +154,7 @@ export function renderScene(
   hoveredAgentId: number | null,
   pet?: Pet | null,
   hoveredFurnitureUid?: string | null,
+  hoveredPet?: boolean,
 ): void {
   const drawables: ZDrawable[] = []
 
@@ -278,6 +279,23 @@ export function renderScene(
         c.drawImage(petCached, petDrawX, petDrawY)
       },
     })
+
+    // Hover outline for pet
+    if (hoveredPet) {
+      const outlineData = getOutlineSprite(petSpriteData)
+      const outlineCached = getCachedSprite(outlineData, zoom)
+      const olPetX = petDrawX - zoom
+      const olPetY = petDrawY - zoom
+      drawables.push({
+        zY: petZY - OUTLINE_Z_SORT_OFFSET,
+        draw: (c) => {
+          c.save()
+          c.globalAlpha = HOVERED_OUTLINE_ALPHA
+          c.drawImage(outlineCached, olPetX, olPetY)
+          c.restore()
+        },
+      })
+    }
 
     // Sleep zzZ bubble above sleeping pet
     if (pet.state === PetState.SLEEP) {
@@ -675,6 +693,7 @@ export interface SelectionRenderState {
   selectedAgentId: number | null
   hoveredAgentId: number | null
   hoveredFurnitureUid: string | null
+  hoveredPet: boolean
   hoveredTile: { col: number; row: number } | null
   seats: Map<string, Seat>
   characters: Map<number, Character>
@@ -730,7 +749,8 @@ export function renderFrame(
   const selectedId = selection?.selectedAgentId ?? null
   const hoveredId = selection?.hoveredAgentId ?? null
   const hoveredFurnUid = selection?.hoveredFurnitureUid ?? null
-  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId, pet, hoveredFurnUid)
+  const isPetHovered = selection?.hoveredPet ?? false
+  renderScene(ctx, allFurniture, characters, offsetX, offsetY, zoom, selectedId, hoveredId, pet, hoveredFurnUid, isPetHovered)
 
   // Speech bubbles (always on top of characters)
   renderBubbles(ctx, characters, offsetX, offsetY, zoom)

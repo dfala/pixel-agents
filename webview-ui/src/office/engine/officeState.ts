@@ -51,6 +51,7 @@ export class OfficeState {
   cameraFollowId: number | null = null
   hoveredAgentId: number | null = null
   hoveredFurnitureUid: string | null = null
+  hoveredPet = false
   hoveredTile: { col: number; row: number } | null = null
   /** Maps "parentId:toolId" → sub-agent character ID (negative) */
   subagentIdMap: Map<string, number> = new Map()

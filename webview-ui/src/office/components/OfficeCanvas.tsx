@@ -206,6 +206,7 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
           selectedAgentId: officeState.selectedAgentId,
           hoveredAgentId: officeState.hoveredAgentId,
           hoveredFurnitureUid: officeState.hoveredFurnitureUid,
+          hoveredPet: officeState.hoveredPet,
           hoveredTile: officeState.hoveredTile,
           seats: officeState.seats,
           characters: officeState.characters,
@@ -421,12 +422,14 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
       // Track hovered interactive furniture (e.g. jukebox)
       const hoveredJukeboxUid = tile ? officeState.getJukeboxAtTile(tile.col, tile.row) : null
       officeState.hoveredFurnitureUid = hoveredJukeboxUid
+      const isPetHovered = hitId === null && !!officeState.getPetAt(pos.worldX, pos.worldY)
+      officeState.hoveredPet = isPetHovered
       const canvas = canvasRef.current
       if (canvas) {
         let cursor = 'default'
         if (hitId !== null) {
           cursor = 'pointer'
-        } else if (officeState.getPetAt(pos.worldX, pos.worldY)) {
+        } else if (isPetHovered) {
           cursor = 'pointer'
         } else if (hoveredJukeboxUid) {
           cursor = 'pointer'
