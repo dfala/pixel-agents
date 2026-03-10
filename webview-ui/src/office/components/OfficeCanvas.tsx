@@ -11,7 +11,7 @@ import { canPlaceFurniture, getWallPlacementRow } from '../editor/editorActions.
 import { pokePet } from '../engine/pet.js'
 import { vscode } from '../../wsApi.js'
 import { unlockAudio } from '../../notificationSound.js'
-import { unlockMusic } from '../../backgroundMusic.js'
+import { unlockMusic, isMusicEnabled, setMusicEnabled, getMusicVolume } from '../../backgroundMusic.js'
 
 interface OfficeCanvasProps {
   officeState: OfficeState
@@ -642,12 +642,18 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
         return
       }
 
-      // Jukebox hit — toggle jukebox popup
+      // Jukebox hit — toggle music + popup
       {
         const tile = screenToTile(e.clientX, e.clientY)
         if (tile) {
           const jukeboxUid = officeState.getJukeboxAtTile(tile.col, tile.row)
           if (jukeboxUid) {
+            // Toggle music play/pause
+            const playing = isMusicEnabled()
+            setMusicEnabled(!playing)
+            if (!playing) unlockMusic()
+            vscode.postMessage({ type: 'setMusicEnabled', enabled: !playing, volume: getMusicVolume() })
+            // Toggle popup
             officeState.activeJukeboxUid = officeState.activeJukeboxUid === jukeboxUid ? null : jukeboxUid
             return
           }

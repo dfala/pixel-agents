@@ -23,9 +23,11 @@ interface JukeboxOverlayProps {
 
 export function JukeboxOverlay({ officeState, containerRef, zoom, panRef }: JukeboxOverlayProps) {
   const [, setTick] = useState(0)
-  const [musicOn, setMusicOn] = useState(isMusicEnabled)
   const [volume, setVolume] = useState(getMusicVolume)
   const [trackId, setTrackId] = useState(getCurrentTrackId)
+
+  // Read music state directly each frame (synced via tick re-render)
+  const musicOn = isMusicEnabled()
 
   // Re-render each frame to track position
   useEffect(() => {
@@ -70,7 +72,6 @@ export function JukeboxOverlay({ officeState, containerRef, zoom, panRef }: Juke
 
   const handleToggle = () => {
     const next = !musicOn
-    setMusicOn(next)
     setMusicEnabled(next)
     if (next) unlockMusic()
     vscode.postMessage({ type: 'setMusicEnabled', enabled: next, volume })
