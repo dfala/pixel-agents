@@ -74,8 +74,12 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
     if (!canvas || !container) return
     const rect = container.getBoundingClientRect()
     const dpr = window.devicePixelRatio || 1
-    canvas.width = Math.round(rect.width * dpr)
-    canvas.height = Math.round(rect.height * dpr)
+    const newWidth = Math.round(rect.width * dpr)
+    const newHeight = Math.round(rect.height * dpr)
+    // Skip if dimensions unchanged — setting canvas.width/height clears the canvas
+    if (canvas.width === newWidth && canvas.height === newHeight) return
+    canvas.width = newWidth
+    canvas.height = newHeight
     canvas.style.width = `${rect.width}px`
     canvas.style.height = `${rect.height}px`
     // No ctx.scale(dpr) — we render directly in device pixels
@@ -277,7 +281,11 @@ export function OfficeCanvas({ officeState, onClick, isEditMode, editorState, on
       window.removeEventListener('keyup', handleKeyUp)
       window.removeEventListener('blur', handleWindowBlur)
     }
-  }, [officeState, resizeCanvas, isEditMode, editorState, _editorTick, zoom, panRef])
+  // Note: _editorTick intentionally excluded — the render loop reads editorState
+  // imperatively each frame, so restarting the game loop on every editor action
+  // is unnecessary and causes canvas flashing (resizeCanvas clears the canvas).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [officeState, resizeCanvas, isEditMode, editorState, zoom, panRef])
 
   // Convert CSS mouse coords to world (sprite pixel) coords
   const screenToWorld = useCallback(
